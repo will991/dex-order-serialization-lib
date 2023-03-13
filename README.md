@@ -13,7 +13,7 @@ One for constructing and encoding, which this library refers to as [`builder`](.
 
 Every [`builder`](./src/utils/types.ts#L18-23) type follows the same pattern inspired by [cardano-serialization-lib (CSL)](https://github.com/Emurgo/cardano-serialization-lib) as follows:
 
-Example for creating an [`IAssetClass`](./src/utils/types.ts#L25-L30):
+Example for creating an [`IAssetClass`](./src/utils/types.ts#L27-L32):
 
 ```
 const minswapAC: IAssetClass = AssetClassBuilder.new()
@@ -30,17 +30,15 @@ const cborHex: string = plutusData.to_hex();
 
 A [`decoder`](./src/utils/types.ts#L10-16) usually takes no arguments to be constructed and offer a `decode` method.
 
-Example for decoding an [`IAssetClass`](./src/utils/types.ts#L25-L30):
+Example for decoding an [`IAssetClass`](./src/utils/types.ts#L27-L32):
 
 ```
-
 try {
   const minswap: IAssetClass = new AssetClassDecoder()
     .decode('29d222ce763455e3d7a09a665ce554f00ac89d2e99a1a83d267170c6434d494e');
 } catch (e) {
   /* invalid asset class cbor passed */
 }
-
 ```
 
 More specific examples related to orders for each DEX can be found under the following links:
