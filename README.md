@@ -7,11 +7,11 @@ Furthermore, its types are also able to read in cbor and decode it to correspond
 ## Type structure
 
 As this library supports decoding from and encoding to cbor, there are generally two types per datum and redeemer.
-One for constructing and encoding, which this library refers to as [`builder`](./src/utils/types.ts#L18-L23) type. And another one for decoding hex-encoded cbor to a specific type, which this library names [`decoder`](./src/utils/types.ts#L10-L16).
+One for constructing and encoding, which this library refers to as [`builder`](./src/utils/types.ts#L20-L25) type. And another one for decoding hex-encoded cbor to a specific type, which this library names [`decoder`](./src/utils/types.ts#L12-L18).
 
 ### Builder type
 
-Every [`builder`](./src/utils/types.ts#L18-L23) type follows the same pattern inspired by [cardano-serialization-lib (CSL)](https://github.com/Emurgo/cardano-serialization-lib) as follows:
+Every [`builder`](./src/utils/types.ts#L20-L25) type follows the same pattern inspired by [cardano-serialization-lib (CSL)](https://github.com/Emurgo/cardano-serialization-lib) as follows:
 
 Example for creating an [`IAssetClass`](./src/utils/types.ts#L25-L30):
 
@@ -28,9 +28,9 @@ const cborHex: string = plutusData.to_hex();
 
 ### Decoder type
 
-A [`decoder`](./src/utils/types.ts#L10-L16) usually takes no arguments to be constructed and offer a `decode` method.
+A [`decoder`](./src/utils/types.ts#L12-L18) usually takes no arguments to be constructed and offer a `decode` method.
 
-Example for decoding an [`IAssetClass`](./src/utils/types.ts#L25-L30):
+Example for decoding an [`IAssetClass`](./src/utils/types.ts#L27-L32):
 
 ```
 
