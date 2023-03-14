@@ -7,7 +7,7 @@ import {
   PlutusList,
 } from '@emurgo/cardano-serialization-lib-nodejs';
 import { Builder, Decodable, fromHex, Network, toHex } from '../../utils';
-import { AddressBuilder, AddressDecoder } from '../../utils/address';
+import { AddressDecoder, EncodableAddressBuilder } from '../../utils/encodable-address';
 import { OrderStepDecoder } from './order-step';
 import { IOrderDatum, IOrderStep } from './types';
 
@@ -32,12 +32,12 @@ export class OrderDatumDecoder implements Decodable<IOrderDatum> {
     const receiverDatumHashCpd = fields.get(2).as_constr_plutus_data();
     if (!receiverDatumHashCpd) throw new Error('Expected constructor plutus data for receiver datum hash');
 
-    let receiverDatumHash: string | undefined = undefined;
+    let receiverDatumHash: string | undefined;
     switch (receiverDatumHashCpd.alternative().to_str()) {
       case '0':
-        const datum_bytes = receiverDatumHashCpd.data().get(0).as_bytes();
-        if (!datum_bytes) throw new Error('No byte buffer found for receiver datum hash');
-        receiverDatumHash = toHex(datum_bytes);
+        const datumBytes = receiverDatumHashCpd.data().get(0).as_bytes();
+        if (!datumBytes) throw new Error('No byte buffer found for receiver datum hash');
+        receiverDatumHash = toHex(datumBytes);
       case '1':
         break;
       default:
@@ -120,8 +120,8 @@ export class OrderDatumBuilder implements Builder<IOrderDatum> {
         const receiverAddress = Address.from_bech32(this._receiver);
 
         const fields = PlutusList.new();
-        fields.add(AddressBuilder.new().address(senderAddress).build().encode());
-        fields.add(AddressBuilder.new().address(receiverAddress).build().encode());
+        fields.add(EncodableAddressBuilder.new().address(senderAddress).build().encode());
+        fields.add(EncodableAddressBuilder.new().address(receiverAddress).build().encode());
         if (this._receiverDatumHash) fields.add(PlutusData.from_hex(this._receiverDatumHash));
         else fields.add(PlutusData.new_constr_plutus_data(ConstrPlutusData.new(BigNum.one(), PlutusList.new())));
         fields.add(this._orderStep.encode());
