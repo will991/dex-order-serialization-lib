@@ -1,6 +1,6 @@
 import { SUNDAESWAP_SCOOPER_FEE_LOVELACE } from '../../../sundaeswap/constant';
 import { OrderDatumDecoder } from '../../../sundaeswap/datums/order-datum';
-import { IOrderAction } from '../../../sundaeswap/datums/types';
+import { IOrderAction, ISwapAction } from '../../../sundaeswap/datums/types';
 import { adaToLovelace } from '../../../utils';
 
 describe('order datum module', () => {
@@ -18,10 +18,10 @@ describe('order datum module', () => {
     expect(actual.orderAddress.destination.datumHash).toBeUndefined();
     expect(actual.orderAddress.pubKeyHash).toBeUndefined();
     expect(actual.scooperFee).toBe(SUNDAESWAP_SCOOPER_FEE_LOVELACE);
-    expect(actual.action as IOrderAction).toBeTruthy();
-    expect((actual.action as IOrderAction).coin).toBe(true);
-    expect((actual.action as IOrderAction).depositAmount).toBe(adaToLovelace(2));
-    expect((actual.action as IOrderAction).minimumReceivedAmount).toBe(BigInt(42389092));
+    expect(actual.action as ISwapAction).toBeTruthy();
+    expect((actual.action as ISwapAction).coin).toBe(true);
+    expect((actual.action as ISwapAction).depositAmount).toBe(adaToLovelace(2));
+    expect((actual.action as ISwapAction).minimumReceivedAmount).toBe(BigInt(42389092));
     expect(actual.encode().to_hex()).toBe(expected);
   });
 
@@ -40,9 +40,9 @@ describe('order datum module', () => {
     expect(actual.orderAddress.pubKeyHash).toBeUndefined();
     expect(actual.scooperFee).toBe(SUNDAESWAP_SCOOPER_FEE_LOVELACE);
     expect(actual.action as IOrderAction).toBeTruthy();
-    expect((actual.action as IOrderAction).coin).toBe(false);
-    expect((actual.action as IOrderAction).depositAmount).toBe(BigInt(20149598));
-    expect((actual.action as IOrderAction).minimumReceivedAmount).toBe(BigInt(1017260));
+    expect((actual.action as ISwapAction).coin).toBe(false);
+    expect((actual.action as ISwapAction).depositAmount).toBe(BigInt(20149598));
+    expect((actual.action as ISwapAction).minimumReceivedAmount).toBe(BigInt(1017260));
     expect(actual.encode().to_hex()).toBe(expected);
   });
 });
