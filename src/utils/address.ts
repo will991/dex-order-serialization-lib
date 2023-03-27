@@ -77,7 +77,7 @@ export class AddressBuilder implements Builder<IAddress> {
   }
 
   address(addr: Address): AddressBuilder {
-    this._bech32Address = addr.to_bech32();
+    this._bech32Address = addr.to_bech32(addr.network_id() === 0 ? 'addr_test' : undefined);
     return this;
   }
 
