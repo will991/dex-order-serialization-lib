@@ -28,7 +28,7 @@ const cborHex: string = plutusData.to_hex();
 
 ### Decoder type
 
-A [`decoder`](./src/utils/types.ts#L12-L18) usually takes no arguments to be constructed and offer a `decode` method.
+A [`decoder`](./src/utils/types.ts#L12-L18) usually takes no arguments to be constructed and offers a `decode` method.
 
 Example for decoding an [`IAssetClass`](./src/utils/types.ts#L27-L32):
 
@@ -41,6 +41,9 @@ try {
 }
 ```
 
+### Further DEX-specific Documentation
+
 More specific examples related to orders for each DEX can be found under the following links:
 
 - [Minswap](./src/minswap/README.md)
+- [Sundaeswap](./src/sundaeswap/README.md)

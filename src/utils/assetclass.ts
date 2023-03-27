@@ -10,16 +10,16 @@ export class AssetClassDecoder implements Decodable<IAssetClass> {
     if (!cpd) throw new Error('Invalid constructor plutus data for asset class');
     const fields = cpd.data();
     if (fields.len() !== 2) throw new Error(`Expected exactly 2 fields for assetclass, received: ${fields.len()}`);
-    const cs_bytes = fields.get(0).as_bytes();
-    if (!cs_bytes) throw new Error('Expected bytes type for currency symbol field.');
-    const tkn_bytes = fields.get(1).as_bytes();
-    if (!tkn_bytes) throw new Error('Expected bytes type for token name field.');
+    const csBytes = fields.get(0).as_bytes();
+    if (!csBytes) throw new Error('Expected bytes type for currency symbol field.');
+    const tknBytes = fields.get(1).as_bytes();
+    if (!tknBytes) throw new Error('Expected bytes type for token name field.');
 
     pd.free();
     cpd.free();
     fields.free();
 
-    return AssetClassBuilder.new().currencySymbol(toHex(cs_bytes)).tokenName(toHex(tkn_bytes)).build();
+    return AssetClassBuilder.new().currencySymbol(toHex(csBytes)).tokenName(toHex(tknBytes)).build();
   }
 }
 
@@ -34,7 +34,7 @@ export class AssetClassBuilder implements Builder<IAssetClass> {
     const cs = fromHex(csHex);
     if (cs.length !== CURRENCY_SYMBOL_HASH_BYTE_BUFFER_LENGTH && cs.length !== 0)
       throw new Error(`Expected ${CURRENCY_SYMBOL_HASH_BYTE_BUFFER_LENGTH} bytes, received: ${cs.length}`);
-    this._cs = fromHex(csHex);
+    this._cs = cs;
     return this;
   }
 
