@@ -36,15 +36,15 @@ export class AddressDecoder implements Decodable<Address> {
     if (fields.len() !== 2) throw new Error(`Expected exactly 2 fields for address, received: ${fields.len()}`);
     const pkhCpd = fields.get(0).as_constr_plutus_data();
     if (!pkhCpd) throw new Error('Expected payment credential plutus data constructor');
-    const pkh_bytes = pkhCpd.data().get(0).as_bytes();
-    if (!pkh_bytes) throw new Error('Expected payment credential byte buffer');
+    const pkhBytes = pkhCpd.data().get(0).as_bytes();
+    if (!pkhBytes) throw new Error('Expected payment credential byte buffer');
     const spkhCpd = fields.get(1).as_constr_plutus_data();
 
     pd.free();
     cpd.free();
     fields.free();
     if (spkhCpd) {
-      const spkh_bytes = spkhCpd
+      const spkhBytes = spkhCpd
         .data()
         .get(0)
         .as_constr_plutus_data()
@@ -54,29 +54,29 @@ export class AddressDecoder implements Decodable<Address> {
         ?.data()
         .get(0)
         .as_bytes();
-      if (!spkh_bytes) throw new Error('Expected nested staking credential byte buffer');
+      if (!spkhBytes) throw new Error('Expected nested staking credential byte buffer');
       return this.network === 'Testnet'
-        ? Address.from_hex(`${PAYMENT_STAKE_ADDRESS_KEY_KEY_PREFIX_TESTNET}${toHex(pkh_bytes)}${toHex(spkh_bytes!)}`)
-        : Address.from_hex(`${PAYMENT_STAKE_ADDRESS_KEY_KEY_PREFIX_MAINNET}${toHex(pkh_bytes)}${toHex(spkh_bytes!)}`);
+        ? Address.from_hex(`${PAYMENT_STAKE_ADDRESS_KEY_KEY_PREFIX_TESTNET}${toHex(pkhBytes)}${toHex(spkhBytes!)}`)
+        : Address.from_hex(`${PAYMENT_STAKE_ADDRESS_KEY_KEY_PREFIX_MAINNET}${toHex(pkhBytes)}${toHex(spkhBytes!)}`);
     } else {
       return this.network === 'Testnet'
-        ? Address.from_hex(`${PAYMENT_ADDRESS_PREFIX_TESTNET}${toHex(pkh_bytes)}`)
-        : Address.from_hex(`${PAYMENT_ADDRESS_PREFIX_MAINNET}${toHex(pkh_bytes)}`);
+        ? Address.from_hex(`${PAYMENT_ADDRESS_PREFIX_TESTNET}${toHex(pkhBytes)}`)
+        : Address.from_hex(`${PAYMENT_ADDRESS_PREFIX_MAINNET}${toHex(pkhBytes)}`);
     }
   }
 }
 
-export class AddressBuilder implements Builder<IAddress> {
+export class EncodableAddressBuilder implements Builder<IAddress> {
   private _bech32Address!: string;
 
-  static new = () => new AddressBuilder();
+  static new = () => new EncodableAddressBuilder();
 
-  bech32Address(bech32: string): AddressBuilder {
+  bech32Address(bech32: string): EncodableAddressBuilder {
     this._bech32Address = bech32;
     return this;
   }
 
-  address(addr: Address): AddressBuilder {
+  address(addr: Address): EncodableAddressBuilder {
     this._bech32Address = addr.to_bech32();
     return this;
   }
@@ -91,7 +91,7 @@ export class AddressBuilder implements Builder<IAddress> {
         const enterpriseAddress = EnterpriseAddress.from_address(address);
 
         const pkh = (baseAddress ?? enterpriseAddress)?.payment_cred().to_keyhash()?.to_bytes();
-        let spkh: Uint8Array | undefined = undefined;
+        let spkh: Uint8Array | undefined;
         if (baseAddress) {
           spkh = baseAddress.stake_cred()?.to_keyhash()?.to_bytes();
         }

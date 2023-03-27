@@ -12,7 +12,6 @@ export const adaToLovelace = (ada: bigint | string | number) => {
     try {
       return cast(ada);
     } catch (e) {
-      console.error(e);
       return BigInt(0);
     }
   }
