@@ -7,10 +7,10 @@ import {
 } from '@emurgo/cardano-serialization-lib-nodejs';
 import { AssetClassDecoder, fromHex } from '../../utils';
 import { Builder, Decodable, Encodable, IAssetClass } from '../../utils/types';
-import { IOrderStep, ISwapExactIn, ISwapExactOut } from './types';
+import { IMinswapOrderStep, IMinswapSwapExactIn, IMinswapSwapExactOut } from './types';
 
-export class OrderStepDecoder implements Decodable<IOrderStep> {
-  decode(cborHex: string): IOrderStep {
+export class OrderStepDecoder implements Decodable<IMinswapOrderStep> {
+  decode(cborHex: string): IMinswapOrderStep {
     const pd = PlutusData.from_bytes(fromHex(cborHex));
     const cpd = pd.as_constr_plutus_data();
     if (!cpd) throw new Error('Invalid constructor plutus data for order step');
@@ -39,7 +39,7 @@ abstract class OrderStepBuilder<T extends Encodable> implements Builder<T> {
   abstract build(): T;
 }
 
-export class SwapExactInBuilder extends OrderStepBuilder<ISwapExactIn> {
+export class SwapExactInBuilder extends OrderStepBuilder<IMinswapSwapExactIn> {
   static new = () => new SwapExactInBuilder();
 
   desiredCoin(coin: IAssetClass): SwapExactInBuilder {
@@ -52,7 +52,7 @@ export class SwapExactInBuilder extends OrderStepBuilder<ISwapExactIn> {
     return this;
   }
 
-  build(): ISwapExactIn {
+  build(): IMinswapSwapExactIn {
     if (!this.coin) throw new Error('"desiredCoin" field is missing a value.');
     if (!this.amount) throw new Error('"minimumReceive" field is missing a value.');
     return {
@@ -68,7 +68,7 @@ export class SwapExactInBuilder extends OrderStepBuilder<ISwapExactIn> {
     };
   }
 }
-export class SwapExactOutBuilder extends OrderStepBuilder<ISwapExactOut> {
+export class SwapExactOutBuilder extends OrderStepBuilder<IMinswapSwapExactOut> {
   static new = () => new SwapExactOutBuilder();
 
   desiredCoin(coin: IAssetClass): SwapExactOutBuilder {
@@ -81,7 +81,7 @@ export class SwapExactOutBuilder extends OrderStepBuilder<ISwapExactOut> {
     return this;
   }
 
-  build(): ISwapExactOut {
+  build(): IMinswapSwapExactOut {
     if (!this.coin) throw new Error('"desiredCoin" field is missing a value.');
     if (!this.amount) throw new Error('"expectedReceive" field is missing a value.');
     return {

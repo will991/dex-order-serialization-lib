@@ -9,9 +9,9 @@ import {
 import { Builder, Decodable, fromHex, Network, toHex } from '../../utils';
 import { AddressDecoder, EncodableAddressBuilder } from '../../utils/encodable-address';
 import { OrderStepDecoder } from './order-step';
-import { IOrderDatum, IOrderStep } from './types';
+import { IMinswapOrderDatum, IMinswapOrderStep } from './types';
 
-export class OrderDatumDecoder implements Decodable<IOrderDatum> {
+export class OrderDatumDecoder implements Decodable<IMinswapOrderDatum> {
   readonly network: Network;
 
   constructor(network: Network) {
@@ -20,7 +20,7 @@ export class OrderDatumDecoder implements Decodable<IOrderDatum> {
 
   static new = (network: Network) => new OrderDatumDecoder(network);
 
-  decode(cborHex: string): IOrderDatum {
+  decode(cborHex: string): IMinswapOrderDatum {
     const pd = PlutusData.from_bytes(fromHex(cborHex));
     const cpd = pd.as_constr_plutus_data();
     if (!cpd) throw new Error('Invalid constructor plutus data for order datum');
@@ -61,10 +61,10 @@ export class OrderDatumDecoder implements Decodable<IOrderDatum> {
   }
 }
 
-export class OrderDatumBuilder implements Builder<IOrderDatum> {
+export class OrderDatumBuilder implements Builder<IMinswapOrderDatum> {
   private _sender!: string;
   private _receiver!: string;
-  private _orderStep!: IOrderStep;
+  private _orderStep!: IMinswapOrderStep;
   private _batcherFee!: BigInt;
   private _outputAda!: BigInt;
   private _receiverDatumHash?: string;
@@ -86,7 +86,7 @@ export class OrderDatumBuilder implements Builder<IOrderDatum> {
     return this;
   }
 
-  orderStep(step: IOrderStep): OrderDatumBuilder {
+  orderStep(step: IMinswapOrderStep): OrderDatumBuilder {
     this._orderStep = step;
     return this;
   }
@@ -101,7 +101,7 @@ export class OrderDatumBuilder implements Builder<IOrderDatum> {
     return this;
   }
 
-  build(): IOrderDatum {
+  build(): IMinswapOrderDatum {
     if (!this._sender) throw new Error('"sender" field is missing a value.');
     if (!this._receiver) throw new Error('"receiver" field is missing a value.');
     if (!this._orderStep) throw new Error('"orderStep" field is missing a value.');
