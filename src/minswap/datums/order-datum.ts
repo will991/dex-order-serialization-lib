@@ -8,17 +8,17 @@ import {
 } from '@emurgo/cardano-serialization-lib-nodejs';
 import { Builder, Decodable, fromHex, Network, toHex } from '../../utils';
 import { AddressDecoder, EncodableAddressBuilder } from '../../utils/encodable-address';
-import { OrderStepDecoder } from './order-step';
+import { MinswapOrderStepDecoder } from './order-step';
 import { IMinswapOrderDatum, IMinswapOrderStep } from './types';
 
-export class OrderDatumDecoder implements Decodable<IMinswapOrderDatum> {
+export class MinswapOrderDatumDecoder implements Decodable<IMinswapOrderDatum> {
   readonly network: Network;
 
   constructor(network: Network) {
     this.network = network;
   }
 
-  static new = (network: Network) => new OrderDatumDecoder(network);
+  static new = (network: Network) => new MinswapOrderDatumDecoder(network);
 
   decode(cborHex: string): IMinswapOrderDatum {
     const pd = PlutusData.from_bytes(fromHex(cborHex));
@@ -44,13 +44,13 @@ export class OrderDatumDecoder implements Decodable<IMinswapOrderDatum> {
         throw new Error('Unhandled alternative for receiver datum hash constructor');
     }
 
-    const orderStep = new OrderStepDecoder().decode(fields.get(3).to_hex());
+    const orderStep = new MinswapOrderStepDecoder().decode(fields.get(3).to_hex());
     const batcherFee = fields.get(4).as_integer();
     if (!batcherFee) throw new Error('Expected integer for batcher fee.');
     const outputAda = fields.get(5).as_integer();
     if (!outputAda) throw new Error('Expected integer for batcher output ADA.');
 
-    return OrderDatumBuilder.new()
+    return MinswapOrderDatumBuilder.new()
       .sender(sender)
       .receiver(receiver)
       .receiverDatumHash(receiverDatumHash)
@@ -61,7 +61,7 @@ export class OrderDatumDecoder implements Decodable<IMinswapOrderDatum> {
   }
 }
 
-export class OrderDatumBuilder implements Builder<IMinswapOrderDatum> {
+export class MinswapOrderDatumBuilder implements Builder<IMinswapOrderDatum> {
   private _sender!: string;
   private _receiver!: string;
   private _orderStep!: IMinswapOrderStep;
@@ -69,34 +69,34 @@ export class OrderDatumBuilder implements Builder<IMinswapOrderDatum> {
   private _outputAda!: BigInt;
   private _receiverDatumHash?: string;
 
-  static new = () => new OrderDatumBuilder();
+  static new = () => new MinswapOrderDatumBuilder();
 
-  sender(address: Address): OrderDatumBuilder {
+  sender(address: Address): MinswapOrderDatumBuilder {
     this._sender = address.to_bech32();
     return this;
   }
 
-  receiver(address: Address): OrderDatumBuilder {
+  receiver(address: Address): MinswapOrderDatumBuilder {
     this._receiver = address.to_bech32();
     return this;
   }
 
-  receiverDatumHash(datumHashHex: string | undefined): OrderDatumBuilder {
+  receiverDatumHash(datumHashHex: string | undefined): MinswapOrderDatumBuilder {
     this._receiverDatumHash = datumHashHex;
     return this;
   }
 
-  orderStep(step: IMinswapOrderStep): OrderDatumBuilder {
+  orderStep(step: IMinswapOrderStep): MinswapOrderDatumBuilder {
     this._orderStep = step;
     return this;
   }
 
-  batcherFee(fee: BigInt): OrderDatumBuilder {
+  batcherFee(fee: BigInt): MinswapOrderDatumBuilder {
     this._batcherFee = fee;
     return this;
   }
 
-  outputAda(lovelace: BigInt): OrderDatumBuilder {
+  outputAda(lovelace: BigInt): MinswapOrderDatumBuilder {
     this._outputAda = lovelace;
     return this;
   }

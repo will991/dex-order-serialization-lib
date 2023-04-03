@@ -1,16 +1,16 @@
 import { BigNum, ConstrPlutusData, PlutusData, PlutusList } from '@emurgo/cardano-serialization-lib-nodejs';
 import { Builder, Decodable, fromHex, Network, toHex } from '../../utils';
-import { OrderDestinationDecoder } from './order-destination';
+import { SundaeswapOrderDestinationDecoder } from './order-destination';
 import { ISundaeSwapOrderAddress, ISundaeSwapOrderDestination } from './types';
 
-export class OrderAddressDecoder implements Decodable<ISundaeSwapOrderAddress> {
+export class SundaeswapOrderAddressDecoder implements Decodable<ISundaeSwapOrderAddress> {
   readonly network: Network;
 
   constructor(network: Network) {
     this.network = network;
   }
 
-  static new = (network: Network) => new OrderAddressDecoder(network);
+  static new = (network: Network) => new SundaeswapOrderAddressDecoder(network);
 
   decode(cborHex: string): ISundaeSwapOrderAddress {
     const pd = PlutusData.from_bytes(fromHex(cborHex));
@@ -19,32 +19,35 @@ export class OrderAddressDecoder implements Decodable<ISundaeSwapOrderAddress> {
     const fields = cpd.data();
     if (fields.len() !== 2)
       throw new Error(`Expected exactly 2 fields for order address datum, received: ${fields.len()}`);
-    const destAddress = new OrderDestinationDecoder(this.network).decode(fields.get(0).to_hex());
+    const destAddress = new SundaeswapOrderDestinationDecoder(this.network).decode(fields.get(0).to_hex());
     const pkhConstr = fields.get(1).as_constr_plutus_data();
     if (!pkhConstr) throw new Error('Invalid alternate pubkey hash type. Expected plutus data constructor');
     switch (pkhConstr.alternative().to_str()) {
       case '0':
-        return OrderAddressBuilder.new().destination(destAddress).pkh(pkhConstr.data().get(0).to_hex()).build();
+        return SundaeswapOrderAddressBuilder.new()
+          .destination(destAddress)
+          .pkh(pkhConstr.data().get(0).to_hex())
+          .build();
       case '1':
-        return OrderAddressBuilder.new().destination(destAddress).build();
+        return SundaeswapOrderAddressBuilder.new().destination(destAddress).build();
       default:
         throw new Error(`Unknown alternate pubkeyhash constructor alternative: ${pkhConstr.alternative().to_str()}`);
     }
   }
 }
 
-export class OrderAddressBuilder implements Builder<ISundaeSwapOrderAddress> {
+export class SundaeswapOrderAddressBuilder implements Builder<ISundaeSwapOrderAddress> {
   private _destination!: ISundaeSwapOrderDestination;
   private _pkh?: Uint8Array;
 
-  static new = () => new OrderAddressBuilder();
+  static new = () => new SundaeswapOrderAddressBuilder();
 
-  pkh(phkHex: string): OrderAddressBuilder {
+  pkh(phkHex: string): SundaeswapOrderAddressBuilder {
     this._pkh = fromHex(phkHex);
     return this;
   }
 
-  destination(dest: ISundaeSwapOrderDestination): OrderAddressBuilder {
+  destination(dest: ISundaeSwapOrderDestination): SundaeswapOrderAddressBuilder {
     this._destination = dest;
     return this;
   }

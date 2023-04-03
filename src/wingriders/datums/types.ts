@@ -1,19 +1,19 @@
 import { Encodable, IAssetClass } from '../../utils';
 import { IAddress } from '../../utils/address';
 
-export interface IOrderDatum extends Encodable {
-  readonly direction: ISwapDirection;
+export interface IWingridersOrderDatum extends Encodable {
+  readonly direction: IWingridersSwapDirection;
   readonly beneficiary: IAddress;
-  readonly owner: IStakeCredential;
+  readonly owner: IWingridersStakeCredential;
   readonly deadline: BigInt;
   readonly lpAssetA: IAssetClass;
   readonly lpAssetB: IAssetClass;
   readonly minAmount: BigInt;
 }
 
-export enum ISwapDirection {
+export enum IWingridersSwapDirection {
   ATOB = 0,
   BTOA = 1,
 }
 
-export type IStakeCredential = string;
+export type IWingridersStakeCredential = string;

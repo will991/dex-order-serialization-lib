@@ -9,13 +9,13 @@ import { Builder, Decodable, Encodable, fromHex } from '../../utils';
 import { EncodableBigInt } from '../../utils/encodable-bigint';
 import { ICoin, IDespositSingle, ISundaeSwapOrderAction, ISundaeSwapOrderWithdraw } from './types';
 
-abstract class OrderActionBuilder<T extends Encodable> implements Builder<T> {
+abstract class SundaeswapOrderActionBuilder<T extends Encodable> implements Builder<T> {
   protected _amount!: BigInt;
 
   abstract build(): T;
 }
 
-export class OrderActionDecoder implements Decodable<ISundaeSwapOrderAction> {
+export class SundaeswapOrderActionDecoder implements Decodable<ISundaeSwapOrderAction> {
   decode(cborHex: string): ISundaeSwapOrderAction {
     const pd = PlutusData.from_bytes(fromHex(cborHex));
     const cpd = pd.as_constr_plutus_data();
@@ -60,13 +60,13 @@ export class OrderSwapDecoder implements Decodable<ISundaeSwapOrderAction> {
       case '0':
         const minimumAmount = minimumReceivedAmountCpd.data().get(0).as_integer();
         if (!minimumAmount) throw new Error('Expected integer type for minimum received amount.');
-        return OrderSwapBuilder.new()
+        return SundaeswapOrderSwapBuilder.new()
           .coin(tradeAInToB)
           .depositAmount(BigInt(depositAmount.to_str()))
           .minimumReceivedAmount(BigInt(minimumAmount.to_str()))
           .build();
       case '1':
-        return OrderSwapBuilder.new().coin(tradeAInToB).depositAmount(BigInt(depositAmount.to_str())).build();
+        return SundaeswapOrderSwapBuilder.new().coin(tradeAInToB).depositAmount(BigInt(depositAmount.to_str())).build();
       default:
         throw new Error(
           `Unknown constructor alternative for order swap ${minimumReceivedAmountCpd.alternative().to_str()}`,
@@ -75,23 +75,23 @@ export class OrderSwapDecoder implements Decodable<ISundaeSwapOrderAction> {
   }
 }
 
-export class OrderSwapBuilder extends OrderActionBuilder<ISundaeSwapOrderAction> {
+export class SundaeswapOrderSwapBuilder extends SundaeswapOrderActionBuilder<ISundaeSwapOrderAction> {
   private _coin!: ICoin;
   private _minimumReceivedAmount?: BigInt;
 
-  static new = () => new OrderSwapBuilder();
+  static new = () => new SundaeswapOrderSwapBuilder();
 
-  coin(tradeAInToB: boolean): OrderSwapBuilder {
+  coin(tradeAInToB: boolean): SundaeswapOrderSwapBuilder {
     this._coin = tradeAInToB;
     return this;
   }
 
-  depositAmount(amount: BigInt): OrderSwapBuilder {
+  depositAmount(amount: BigInt): SundaeswapOrderSwapBuilder {
     this._amount = amount;
     return this;
   }
 
-  minimumReceivedAmount(amount: BigInt): OrderSwapBuilder {
+  minimumReceivedAmount(amount: BigInt): SundaeswapOrderSwapBuilder {
     this._minimumReceivedAmount = amount;
     return this;
   }
@@ -126,15 +126,15 @@ export class OrderSwapBuilder extends OrderActionBuilder<ISundaeSwapOrderAction>
   }
 }
 
-export class OrderDepositSingleBuilder extends OrderActionBuilder<IDespositSingle> {
+export class SundaeswapOrderDepositSingleBuilder extends SundaeswapOrderActionBuilder<IDespositSingle> {
   private _coin!: ICoin;
 
-  coin(tradeAIntoB: boolean): OrderDepositSingleBuilder {
+  coin(tradeAIntoB: boolean): SundaeswapOrderDepositSingleBuilder {
     this._coin = tradeAIntoB;
     return this;
   }
 
-  amount(amount: BigInt): OrderDepositSingleBuilder {
+  amount(amount: BigInt): SundaeswapOrderDepositSingleBuilder {
     this._amount = amount;
     return this;
   }

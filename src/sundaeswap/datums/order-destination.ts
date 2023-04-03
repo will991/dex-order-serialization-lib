@@ -2,14 +2,14 @@ import { BigNum, ConstrPlutusData, PlutusData, PlutusList } from '@emurgo/cardan
 import { AddressDecoder, Builder, Decodable, EncodableAddressBuilder, fromHex, Network } from '../../utils';
 import { ISundaeSwapOrderDestination } from './types';
 
-export class OrderDestinationDecoder implements Decodable<ISundaeSwapOrderDestination> {
+export class SundaeswapOrderDestinationDecoder implements Decodable<ISundaeSwapOrderDestination> {
   readonly network: Network;
 
   constructor(network: Network) {
     this.network = network;
   }
 
-  static new = (network: Network) => new OrderDestinationDecoder(network);
+  static new = (network: Network) => new SundaeswapOrderDestinationDecoder(network);
 
   decode(cborHex: string): ISundaeSwapOrderDestination {
     const pd = PlutusData.from_bytes(fromHex(cborHex));
@@ -24,30 +24,30 @@ export class OrderDestinationDecoder implements Decodable<ISundaeSwapOrderDestin
     if (!datumHashConstr) throw new Error('Invalid datum hash type. Expected plutus data constructor');
     switch (datumHashConstr.alternative().to_str()) {
       case '0':
-        return OrderDestinationBuilder.new()
+        return SundaeswapOrderDestinationBuilder.new()
           .bech32Address(address.to_bech32())
           .datumHash(datumHashConstr.data().get(0).to_hex())
           .build();
       case '1':
-        return OrderDestinationBuilder.new().bech32Address(address.to_bech32()).build();
+        return SundaeswapOrderDestinationBuilder.new().bech32Address(address.to_bech32()).build();
       default:
         throw new Error(`Unknown datum hash constructor alternative: ${datumHashConstr.alternative().to_str()}`);
     }
   }
 }
 
-export class OrderDestinationBuilder implements Builder<ISundaeSwapOrderDestination> {
+export class SundaeswapOrderDestinationBuilder implements Builder<ISundaeSwapOrderDestination> {
   private _address!: string;
   private _datumHash?: string;
 
-  static new = () => new OrderDestinationBuilder();
+  static new = () => new SundaeswapOrderDestinationBuilder();
 
-  bech32Address(bech32: string): OrderDestinationBuilder {
+  bech32Address(bech32: string): SundaeswapOrderDestinationBuilder {
     this._address = bech32;
     return this;
   }
 
-  datumHash(hash: string): OrderDestinationBuilder {
+  datumHash(hash: string): SundaeswapOrderDestinationBuilder {
     this._datumHash = hash;
     return this;
   }

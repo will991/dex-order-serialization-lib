@@ -7,18 +7,18 @@ import {
 } from '@emurgo/cardano-serialization-lib-nodejs';
 import { Builder, Decodable, fromHex, Network, toHex } from '../../utils';
 import { SUNDAESWAP_SCOOPER_FEE_LOVELACE } from '../constant';
-import { OrderActionDecoder } from './order-action';
-import { OrderAddressDecoder } from './order-address';
+import { SundaeswapOrderActionDecoder } from './order-action';
+import { SundaeswapOrderAddressDecoder } from './order-address';
 import { ISundaeSwapOrderAction, ISundaeSwapOrderAddress, ISundaeSwapOrderDatum } from './types';
 
-export class OrderDatumDecoder implements Decodable<ISundaeSwapOrderDatum> {
+export class SundaeswapOrderDatumDecoder implements Decodable<ISundaeSwapOrderDatum> {
   readonly network: Network;
 
   constructor(network: Network) {
     this.network = network;
   }
 
-  static new = (network: Network) => new OrderDatumDecoder(network);
+  static new = (network: Network) => new SundaeswapOrderDatumDecoder(network);
 
   decode(cborHex: string): ISundaeSwapOrderDatum {
     const pd = PlutusData.from_bytes(fromHex(cborHex));
@@ -28,12 +28,12 @@ export class OrderDatumDecoder implements Decodable<ISundaeSwapOrderDatum> {
     if (fields.len() !== 4) throw new Error(`Expected exactly 4 fields for order datum, received: ${fields.len()}`);
     const poolIdBytes = fields.get(0).as_bytes();
     if (!poolIdBytes) throw new Error('No byte buffer found for pool identifier');
-    const orderAddress = new OrderAddressDecoder(this.network).decode(fields.get(1).to_hex());
+    const orderAddress = new SundaeswapOrderAddressDecoder(this.network).decode(fields.get(1).to_hex());
     const scooperFee = fields.get(2).as_integer();
     if (!scooperFee) throw new Error('No byte buffer found for scooper fee');
-    const action = new OrderActionDecoder().decode(fields.get(3).to_hex());
+    const action = new SundaeswapOrderActionDecoder().decode(fields.get(3).to_hex());
 
-    return OrderDatumBuilder.new()
+    return SundaeswapOrderDatumBuilder.new()
       .poolIdentifier(toHex(poolIdBytes))
       .orderAddress(orderAddress)
       .scooperFee(BigInt(scooperFee.to_str()))
@@ -43,30 +43,30 @@ export class OrderDatumDecoder implements Decodable<ISundaeSwapOrderDatum> {
 }
 
 // Reference datum: https://cardanoscan.io/datumInspector?datum=d8799f424901d8799fd8799fd8799fd8799f581cc18771c59723112bef1748b89dd05de1f6906822cea0a83158f18e61ffd8799fd8799fd8799f581c29cc9d309fa9774eca1faef3432f5c292b6e75986f07ed002f1035f2ffffffffd87a80ffd87a80ff1a002625a0d8799fd87a801a0133755ed8799f1a000f85acffffff
-export class OrderDatumBuilder implements Builder<ISundaeSwapOrderDatum> {
+export class SundaeswapOrderDatumBuilder implements Builder<ISundaeSwapOrderDatum> {
   private _poolIdentifier!: string;
   private _orderAddress!: ISundaeSwapOrderAddress;
   private _scooperFee: BigInt = SUNDAESWAP_SCOOPER_FEE_LOVELACE;
   private _action!: ISundaeSwapOrderAction;
 
-  static new = () => new OrderDatumBuilder();
+  static new = () => new SundaeswapOrderDatumBuilder();
 
-  poolIdentifier(ident: string): OrderDatumBuilder {
+  poolIdentifier(ident: string): SundaeswapOrderDatumBuilder {
     this._poolIdentifier = ident;
     return this;
   }
 
-  orderAddress(eAddress: ISundaeSwapOrderAddress): OrderDatumBuilder {
+  orderAddress(eAddress: ISundaeSwapOrderAddress): SundaeswapOrderDatumBuilder {
     this._orderAddress = eAddress;
     return this;
   }
 
-  scooperFee(fee: BigInt): OrderDatumBuilder {
+  scooperFee(fee: BigInt): SundaeswapOrderDatumBuilder {
     this._scooperFee = fee;
     return this;
   }
 
-  action(action: ISundaeSwapOrderAction): OrderDatumBuilder {
+  action(action: ISundaeSwapOrderAction): SundaeswapOrderDatumBuilder {
     this._action = action;
     return this;
   }

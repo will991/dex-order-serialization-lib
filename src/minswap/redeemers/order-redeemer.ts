@@ -2,7 +2,7 @@ import { BigNum, ConstrPlutusData, PlutusData, PlutusList } from '@emurgo/cardan
 import { Builder, Decodable, fromHex } from '../../utils';
 import { IMinswapOrderRedeemer, IMinswapOrderRedeemerType } from './types';
 
-export class OrderRedeemerDecoder implements Decodable<IMinswapOrderRedeemer> {
+export class MinswapOrderRedeemerDecoder implements Decodable<IMinswapOrderRedeemer> {
   decode(cborHex: string): IMinswapOrderRedeemer {
     const pd = PlutusData.from_bytes(fromHex(cborHex));
     const cpd = pd.as_constr_plutus_data();
@@ -10,21 +10,21 @@ export class OrderRedeemerDecoder implements Decodable<IMinswapOrderRedeemer> {
 
     switch (cpd.alternative().to_str()) {
       case '0':
-        return OrderRedeemerBuilder.new().type('ApplyOrder').build();
+        return MinswapOrderRedeemerBuilder.new().type('ApplyOrder').build();
       case '1':
-        return OrderRedeemerBuilder.new().type('CancelOrder').build();
+        return MinswapOrderRedeemerBuilder.new().type('CancelOrder').build();
       default:
         throw new Error('Unhandled alternative for order redeemer constructor');
     }
   }
 }
 
-export class OrderRedeemerBuilder implements Builder<IMinswapOrderRedeemer> {
+export class MinswapOrderRedeemerBuilder implements Builder<IMinswapOrderRedeemer> {
   private _type!: IMinswapOrderRedeemerType;
 
-  static new = () => new OrderRedeemerBuilder();
+  static new = () => new MinswapOrderRedeemerBuilder();
 
-  type(redeemer: IMinswapOrderRedeemerType): OrderRedeemerBuilder {
+  type(redeemer: IMinswapOrderRedeemerType): MinswapOrderRedeemerBuilder {
     this._type = redeemer;
     return this;
   }

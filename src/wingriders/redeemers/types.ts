@@ -1,8 +1,8 @@
 import { Encodable } from '../../utils';
 
-export type RequestRedeemer = IApply | IReclaim;
+export type IWingridersRequestRedeemer = IWingridersApply | IWingridersReclaim;
 
-export interface IReclaim extends Encodable {}
-export interface IApply extends Encodable {
+export interface IWingridersReclaim extends Encodable {}
+export interface IWingridersApply extends Encodable {
   poolInputLocation: number;
 }
