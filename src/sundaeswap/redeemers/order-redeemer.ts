@@ -1,8 +1,8 @@
 import { BigNum, ConstrPlutusData, PlutusData, PlutusList } from '@emurgo/cardano-serialization-lib-nodejs';
 import { AssetClassDecoder, Builder, Decodable, fromHex, IAssetClass } from '../../utils';
-import { IOrderRedeemer, IOrderRedeemerType } from './types';
+import { IOrderRedeemer, ISundaeSwapOrderRedeemerType } from './types';
 
-export class OrderRedeemerDecoder implements Decodable<IOrderRedeemer> {
+export class SundaeswapOrderRedeemerDecoder implements Decodable<IOrderRedeemer> {
   decode(cborHex: string): IOrderRedeemer {
     const pd = PlutusData.from_bytes(fromHex(cborHex));
     const cpd = pd.as_constr_plutus_data();
@@ -10,30 +10,30 @@ export class OrderRedeemerDecoder implements Decodable<IOrderRedeemer> {
 
     switch (cpd.alternative().to_str()) {
       case '0':
-        return OrderRedeemerBuilder.new()
+        return SundaeswapOrderRedeemerBuilder.new()
           .type('OrderScoop')
           .scooper(new AssetClassDecoder().decode(pd.to_hex()))
           .build();
       case '1':
-        return OrderRedeemerBuilder.new().type('OrderCancel').build();
+        return SundaeswapOrderRedeemerBuilder.new().type('OrderCancel').build();
       default:
         throw new Error('Unhandled alternative for order redeemer constructor');
     }
   }
 }
 
-export class OrderRedeemerBuilder implements Builder<IOrderRedeemer> {
-  private _type!: IOrderRedeemerType;
+export class SundaeswapOrderRedeemerBuilder implements Builder<IOrderRedeemer> {
+  private _type!: ISundaeSwapOrderRedeemerType;
   private _scooper?: IAssetClass;
 
-  static new = () => new OrderRedeemerBuilder();
+  static new = () => new SundaeswapOrderRedeemerBuilder();
 
-  type(redeemer: IOrderRedeemerType): OrderRedeemerBuilder {
+  type(redeemer: ISundaeSwapOrderRedeemerType): SundaeswapOrderRedeemerBuilder {
     this._type = redeemer;
     return this;
   }
 
-  scooper(assetClass: IAssetClass): OrderRedeemerBuilder {
+  scooper(assetClass: IAssetClass): SundaeswapOrderRedeemerBuilder {
     this._scooper = assetClass;
     return this;
   }

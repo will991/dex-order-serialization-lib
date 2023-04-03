@@ -7,16 +7,16 @@ import {
 } from '@emurgo/cardano-serialization-lib-nodejs';
 import { Builder, Decodable, Encodable, fromHex } from '../../utils';
 import { EncodableBigInt } from '../../utils/encodable-bigint';
-import { ICoin, IDespositSingle, IOrderAction, IOrderWithdraw } from './types';
+import { ICoin, IDespositSingle, ISundaeSwapOrderAction, ISundaeSwapOrderWithdraw } from './types';
 
-abstract class OrderActionBuilder<T extends Encodable> implements Builder<T> {
+abstract class SundaeswapOrderActionBuilder<T extends Encodable> implements Builder<T> {
   protected _amount!: BigInt;
 
   abstract build(): T;
 }
 
-export class OrderActionDecoder implements Decodable<IOrderAction> {
-  decode(cborHex: string): IOrderAction {
+export class SundaeswapOrderActionDecoder implements Decodable<ISundaeSwapOrderAction> {
+  decode(cborHex: string): ISundaeSwapOrderAction {
     const pd = PlutusData.from_bytes(fromHex(cborHex));
     const cpd = pd.as_constr_plutus_data();
     if (!cpd) throw new Error('Invalid constructor plutus data for order action');
@@ -28,7 +28,7 @@ export class OrderActionDecoder implements Decodable<IOrderAction> {
       case '1':
         const withdrawAmount = cpd.data().get(0).as_integer();
         if (!withdrawAmount) throw new Error('Expected withdraw amount as integer.');
-        return new EncodableBigInt(BigInt(withdrawAmount.to_str())) as IOrderWithdraw;
+        return new EncodableBigInt(BigInt(withdrawAmount.to_str())) as ISundaeSwapOrderWithdraw;
       case '2':
         throw new Error('Missing implementation');
       default:
@@ -37,8 +37,8 @@ export class OrderActionDecoder implements Decodable<IOrderAction> {
   }
 }
 
-export class OrderSwapDecoder implements Decodable<IOrderAction> {
-  decode(cborHex: string): IOrderAction {
+export class OrderSwapDecoder implements Decodable<ISundaeSwapOrderAction> {
+  decode(cborHex: string): ISundaeSwapOrderAction {
     const pd = PlutusData.from_bytes(fromHex(cborHex));
     const cpd = pd.as_constr_plutus_data();
     if (!cpd) throw new Error('Invalid constructor plutus data for order swap');
@@ -60,13 +60,13 @@ export class OrderSwapDecoder implements Decodable<IOrderAction> {
       case '0':
         const minimumAmount = minimumReceivedAmountCpd.data().get(0).as_integer();
         if (!minimumAmount) throw new Error('Expected integer type for minimum received amount.');
-        return OrderSwapBuilder.new()
+        return SundaeswapOrderSwapBuilder.new()
           .coin(tradeAInToB)
           .depositAmount(BigInt(depositAmount.to_str()))
           .minimumReceivedAmount(BigInt(minimumAmount.to_str()))
           .build();
       case '1':
-        return OrderSwapBuilder.new().coin(tradeAInToB).depositAmount(BigInt(depositAmount.to_str())).build();
+        return SundaeswapOrderSwapBuilder.new().coin(tradeAInToB).depositAmount(BigInt(depositAmount.to_str())).build();
       default:
         throw new Error(
           `Unknown constructor alternative for order swap ${minimumReceivedAmountCpd.alternative().to_str()}`,
@@ -75,28 +75,28 @@ export class OrderSwapDecoder implements Decodable<IOrderAction> {
   }
 }
 
-export class OrderSwapBuilder extends OrderActionBuilder<IOrderAction> {
+export class SundaeswapOrderSwapBuilder extends SundaeswapOrderActionBuilder<ISundaeSwapOrderAction> {
   private _coin!: ICoin;
   private _minimumReceivedAmount?: BigInt;
 
-  static new = () => new OrderSwapBuilder();
+  static new = () => new SundaeswapOrderSwapBuilder();
 
-  coin(tradeAInToB: boolean): OrderSwapBuilder {
+  coin(tradeAInToB: boolean): SundaeswapOrderSwapBuilder {
     this._coin = tradeAInToB;
     return this;
   }
 
-  depositAmount(amount: BigInt): OrderSwapBuilder {
+  depositAmount(amount: BigInt): SundaeswapOrderSwapBuilder {
     this._amount = amount;
     return this;
   }
 
-  minimumReceivedAmount(amount: BigInt): OrderSwapBuilder {
+  minimumReceivedAmount(amount: BigInt): SundaeswapOrderSwapBuilder {
     this._minimumReceivedAmount = amount;
     return this;
   }
 
-  build(): IOrderAction {
+  build(): ISundaeSwapOrderAction {
     if (this._coin === undefined) throw new Error('"coin" field is missing a value.');
     if (!this._amount) throw new Error('"depositAmount" field is missing a value.');
 
@@ -126,15 +126,15 @@ export class OrderSwapBuilder extends OrderActionBuilder<IOrderAction> {
   }
 }
 
-export class OrderDepositSingleBuilder extends OrderActionBuilder<IDespositSingle> {
+export class SundaeswapOrderDepositSingleBuilder extends SundaeswapOrderActionBuilder<IDespositSingle> {
   private _coin!: ICoin;
 
-  coin(tradeAIntoB: boolean): OrderDepositSingleBuilder {
+  coin(tradeAIntoB: boolean): SundaeswapOrderDepositSingleBuilder {
     this._coin = tradeAIntoB;
     return this;
   }
 
-  amount(amount: BigInt): OrderDepositSingleBuilder {
+  amount(amount: BigInt): SundaeswapOrderDepositSingleBuilder {
     this._amount = amount;
     return this;
   }

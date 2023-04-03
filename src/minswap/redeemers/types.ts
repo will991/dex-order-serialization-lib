@@ -1,6 +1,6 @@
 import { Encodable } from '../../utils';
 
-export type IOrderRedeemerType = 'ApplyOrder' | 'CancelOrder';
-export interface IOrderRedeemer extends Encodable {
-  type: IOrderRedeemerType;
+export type IMinswapOrderRedeemerType = 'ApplyOrder' | 'CancelOrder';
+export interface IMinswapOrderRedeemer extends Encodable {
+  type: IMinswapOrderRedeemerType;
 }

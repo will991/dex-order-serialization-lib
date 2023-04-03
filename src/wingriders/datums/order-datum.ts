@@ -7,18 +7,18 @@ import {
 } from '@emurgo/cardano-serialization-lib-nodejs';
 import { AssetClassDecoder, Builder, Decodable, fromHex, IAssetClass, Network, toHex } from '../../utils';
 import { AddressBuilder, AddressDecoder, IAddress } from '../../utils/address';
-import { IOrderDatum, IStakeCredential, ISwapDirection } from './types';
+import { IWingridersOrderDatum, IWingridersStakeCredential, IWingridersSwapDirection } from './types';
 
-export class OrderDatumDecoder implements Decodable<IOrderDatum> {
+export class WingridersOrderDatumDecoder implements Decodable<IWingridersOrderDatum> {
   readonly network: Network;
 
   constructor(network: Network) {
     this.network = network;
   }
 
-  static new = (network: Network) => new OrderDatumDecoder(network);
+  static new = (network: Network) => new WingridersOrderDatumDecoder(network);
 
-  decode(cborHex: string): IOrderDatum {
+  decode(cborHex: string): IWingridersOrderDatum {
     const pd = PlutusData.from_bytes(fromHex(cborHex));
     const cpd = pd.as_constr_plutus_data();
     if (cpd?.alternative().is_zero() !== true) throw new Error('Invalid constructor alternative');
@@ -52,12 +52,12 @@ export class OrderDatumDecoder implements Decodable<IOrderDatum> {
 
     const directionAlternative = swapFields.data().get(0).as_constr_plutus_data()?.alternative();
     if (!directionAlternative) throw new Error('Invalid direction. Expected plutus constr');
-    const direction = directionAlternative.is_zero() ? ISwapDirection.ATOB : ISwapDirection.BTOA;
+    const direction = directionAlternative.is_zero() ? IWingridersSwapDirection.ATOB : IWingridersSwapDirection.BTOA;
 
     const minAmount = swapFields.data().get(1).as_integer();
     if (!minAmount) throw new Error('Expected big integer for amount field');
 
-    return OrderDatumBuilder.new()
+    return WingridersOrderDatumBuilder.new()
       .direction(direction)
       .beneficiary(beneficiary.to_bech32(this.network === 'Mainnet' ? undefined : 'addr_test'))
       .owner(toHex(owner))
@@ -69,53 +69,53 @@ export class OrderDatumDecoder implements Decodable<IOrderDatum> {
   }
 }
 
-export class OrderDatumBuilder implements Builder<IOrderDatum> {
-  private _direction!: ISwapDirection;
+export class WingridersOrderDatumBuilder implements Builder<IWingridersOrderDatum> {
+  private _direction!: IWingridersSwapDirection;
   private _beneficiary!: IAddress;
-  private _owner!: IStakeCredential;
+  private _owner!: IWingridersStakeCredential;
   private _deadline!: BigInt;
   private _assetA!: IAssetClass;
   private _assetB!: IAssetClass;
   private _minAmount!: BigInt;
 
-  static new = () => new OrderDatumBuilder();
+  static new = () => new WingridersOrderDatumBuilder();
 
-  direction(direction: ISwapDirection): OrderDatumBuilder {
+  direction(direction: IWingridersSwapDirection): WingridersOrderDatumBuilder {
     this._direction = direction;
     return this;
   }
 
-  beneficiary(bech32Address: string): OrderDatumBuilder {
+  beneficiary(bech32Address: string): WingridersOrderDatumBuilder {
     this._beneficiary = AddressBuilder.new().bech32Address(bech32Address).build();
     return this;
   }
 
-  owner(owner: string): OrderDatumBuilder {
+  owner(owner: string): WingridersOrderDatumBuilder {
     this._owner = owner;
     return this;
   }
 
-  deadline(deadline: bigint): OrderDatumBuilder {
+  deadline(deadline: bigint): WingridersOrderDatumBuilder {
     this._deadline = deadline;
     return this;
   }
 
-  assetA(asset: IAssetClass): OrderDatumBuilder {
+  assetA(asset: IAssetClass): WingridersOrderDatumBuilder {
     this._assetA = asset;
     return this;
   }
 
-  assetB(asset: IAssetClass): OrderDatumBuilder {
+  assetB(asset: IAssetClass): WingridersOrderDatumBuilder {
     this._assetB = asset;
     return this;
   }
 
-  minAmount(minAmount: BigInt): OrderDatumBuilder {
+  minAmount(minAmount: BigInt): WingridersOrderDatumBuilder {
     this._minAmount = minAmount;
     return this;
   }
 
-  build(): IOrderDatum {
+  build(): IWingridersOrderDatum {
     if (this._direction === undefined) throw new Error('"direction" field is missing a value.');
     if (!this._beneficiary) throw new Error('"beneficiary" field is missing a value.');
     if (!this._owner) throw new Error('"owner" field is missing a value.');
@@ -149,7 +149,9 @@ export class OrderDatumBuilder implements Builder<IOrderDatum> {
 
         const swap = PlutusList.new();
         swap.add(
-          PlutusData.new_empty_constr_plutus_data(BigNum.from_str(this.direction === ISwapDirection.ATOB ? '0' : '1')),
+          PlutusData.new_empty_constr_plutus_data(
+            BigNum.from_str(this.direction === IWingridersSwapDirection.ATOB ? '0' : '1'),
+          ),
         );
         swap.add(PlutusData.new_integer(CSLBigInt.from_str(this.minAmount.toString())));
 

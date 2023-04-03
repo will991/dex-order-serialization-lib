@@ -1,35 +1,35 @@
 import { BigNum, ConstrPlutusData, PlutusData, PlutusList } from '@emurgo/cardano-serialization-lib-nodejs';
 import { Builder, Decodable, fromHex } from '../../utils';
-import { IOrderRedeemer, IOrderRedeemerType } from './types';
+import { IMinswapOrderRedeemer, IMinswapOrderRedeemerType } from './types';
 
-export class OrderRedeemerDecoder implements Decodable<IOrderRedeemer> {
-  decode(cborHex: string): IOrderRedeemer {
+export class MinswapOrderRedeemerDecoder implements Decodable<IMinswapOrderRedeemer> {
+  decode(cborHex: string): IMinswapOrderRedeemer {
     const pd = PlutusData.from_bytes(fromHex(cborHex));
     const cpd = pd.as_constr_plutus_data();
     if (!cpd) throw new Error('Invalid constructor plutus data for order datum');
 
     switch (cpd.alternative().to_str()) {
       case '0':
-        return OrderRedeemerBuilder.new().type('ApplyOrder').build();
+        return MinswapOrderRedeemerBuilder.new().type('ApplyOrder').build();
       case '1':
-        return OrderRedeemerBuilder.new().type('CancelOrder').build();
+        return MinswapOrderRedeemerBuilder.new().type('CancelOrder').build();
       default:
         throw new Error('Unhandled alternative for order redeemer constructor');
     }
   }
 }
 
-export class OrderRedeemerBuilder implements Builder<IOrderRedeemer> {
-  private _type!: IOrderRedeemerType;
+export class MinswapOrderRedeemerBuilder implements Builder<IMinswapOrderRedeemer> {
+  private _type!: IMinswapOrderRedeemerType;
 
-  static new = () => new OrderRedeemerBuilder();
+  static new = () => new MinswapOrderRedeemerBuilder();
 
-  type(redeemer: IOrderRedeemerType): OrderRedeemerBuilder {
+  type(redeemer: IMinswapOrderRedeemerType): MinswapOrderRedeemerBuilder {
     this._type = redeemer;
     return this;
   }
 
-  build(): IOrderRedeemer {
+  build(): IMinswapOrderRedeemer {
     if (!this._type) throw new Error('"type" field is missing a value.');
     return {
       type: this._type,
