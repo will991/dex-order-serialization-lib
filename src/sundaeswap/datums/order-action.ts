@@ -7,7 +7,7 @@ import {
 } from '@emurgo/cardano-serialization-lib-nodejs';
 import { Builder, Decodable, Encodable, fromHex } from '../../utils';
 import { EncodableBigInt } from '../../utils/encodable-bigint';
-import { ICoin, IDespositSingle, IOrderAction, IOrderWithdraw } from './types';
+import { ICoin, IDespositSingle, ISundaeSwapOrderAction, ISundaeSwapOrderWithdraw } from './types';
 
 abstract class OrderActionBuilder<T extends Encodable> implements Builder<T> {
   protected _amount!: BigInt;
@@ -15,8 +15,8 @@ abstract class OrderActionBuilder<T extends Encodable> implements Builder<T> {
   abstract build(): T;
 }
 
-export class OrderActionDecoder implements Decodable<IOrderAction> {
-  decode(cborHex: string): IOrderAction {
+export class OrderActionDecoder implements Decodable<ISundaeSwapOrderAction> {
+  decode(cborHex: string): ISundaeSwapOrderAction {
     const pd = PlutusData.from_bytes(fromHex(cborHex));
     const cpd = pd.as_constr_plutus_data();
     if (!cpd) throw new Error('Invalid constructor plutus data for order action');
@@ -28,7 +28,7 @@ export class OrderActionDecoder implements Decodable<IOrderAction> {
       case '1':
         const withdrawAmount = cpd.data().get(0).as_integer();
         if (!withdrawAmount) throw new Error('Expected withdraw amount as integer.');
-        return new EncodableBigInt(BigInt(withdrawAmount.to_str())) as IOrderWithdraw;
+        return new EncodableBigInt(BigInt(withdrawAmount.to_str())) as ISundaeSwapOrderWithdraw;
       case '2':
         throw new Error('Missing implementation');
       default:
@@ -37,8 +37,8 @@ export class OrderActionDecoder implements Decodable<IOrderAction> {
   }
 }
 
-export class OrderSwapDecoder implements Decodable<IOrderAction> {
-  decode(cborHex: string): IOrderAction {
+export class OrderSwapDecoder implements Decodable<ISundaeSwapOrderAction> {
+  decode(cborHex: string): ISundaeSwapOrderAction {
     const pd = PlutusData.from_bytes(fromHex(cborHex));
     const cpd = pd.as_constr_plutus_data();
     if (!cpd) throw new Error('Invalid constructor plutus data for order swap');
@@ -75,7 +75,7 @@ export class OrderSwapDecoder implements Decodable<IOrderAction> {
   }
 }
 
-export class OrderSwapBuilder extends OrderActionBuilder<IOrderAction> {
+export class OrderSwapBuilder extends OrderActionBuilder<ISundaeSwapOrderAction> {
   private _coin!: ICoin;
   private _minimumReceivedAmount?: BigInt;
 
@@ -96,7 +96,7 @@ export class OrderSwapBuilder extends OrderActionBuilder<IOrderAction> {
     return this;
   }
 
-  build(): IOrderAction {
+  build(): ISundaeSwapOrderAction {
     if (this._coin === undefined) throw new Error('"coin" field is missing a value.');
     if (!this._amount) throw new Error('"depositAmount" field is missing a value.');
 

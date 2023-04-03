@@ -9,9 +9,9 @@ import { Builder, Decodable, fromHex, Network, toHex } from '../../utils';
 import { SUNDAESWAP_SCOOPER_FEE_LOVELACE } from '../constant';
 import { OrderActionDecoder } from './order-action';
 import { OrderAddressDecoder } from './order-address';
-import { IOrderAction, IOrderAddress, IOrderDatum } from './types';
+import { ISundaeSwapOrderAction, ISundaeSwapOrderAddress, ISundaeSwapOrderDatum } from './types';
 
-export class OrderDatumDecoder implements Decodable<IOrderDatum> {
+export class OrderDatumDecoder implements Decodable<ISundaeSwapOrderDatum> {
   readonly network: Network;
 
   constructor(network: Network) {
@@ -20,7 +20,7 @@ export class OrderDatumDecoder implements Decodable<IOrderDatum> {
 
   static new = (network: Network) => new OrderDatumDecoder(network);
 
-  decode(cborHex: string): IOrderDatum {
+  decode(cborHex: string): ISundaeSwapOrderDatum {
     const pd = PlutusData.from_bytes(fromHex(cborHex));
     const cpd = pd.as_constr_plutus_data();
     if (!cpd) throw new Error('Invalid constructor plutus data for order datum');
@@ -43,11 +43,11 @@ export class OrderDatumDecoder implements Decodable<IOrderDatum> {
 }
 
 // Reference datum: https://cardanoscan.io/datumInspector?datum=d8799f424901d8799fd8799fd8799fd8799f581cc18771c59723112bef1748b89dd05de1f6906822cea0a83158f18e61ffd8799fd8799fd8799f581c29cc9d309fa9774eca1faef3432f5c292b6e75986f07ed002f1035f2ffffffffd87a80ffd87a80ff1a002625a0d8799fd87a801a0133755ed8799f1a000f85acffffff
-export class OrderDatumBuilder implements Builder<IOrderDatum> {
+export class OrderDatumBuilder implements Builder<ISundaeSwapOrderDatum> {
   private _poolIdentifier!: string;
-  private _orderAddress!: IOrderAddress;
+  private _orderAddress!: ISundaeSwapOrderAddress;
   private _scooperFee: BigInt = SUNDAESWAP_SCOOPER_FEE_LOVELACE;
-  private _action!: IOrderAction;
+  private _action!: ISundaeSwapOrderAction;
 
   static new = () => new OrderDatumBuilder();
 
@@ -56,7 +56,7 @@ export class OrderDatumBuilder implements Builder<IOrderDatum> {
     return this;
   }
 
-  orderAddress(eAddress: IOrderAddress): OrderDatumBuilder {
+  orderAddress(eAddress: ISundaeSwapOrderAddress): OrderDatumBuilder {
     this._orderAddress = eAddress;
     return this;
   }
@@ -66,12 +66,12 @@ export class OrderDatumBuilder implements Builder<IOrderDatum> {
     return this;
   }
 
-  action(action: IOrderAction): OrderDatumBuilder {
+  action(action: ISundaeSwapOrderAction): OrderDatumBuilder {
     this._action = action;
     return this;
   }
 
-  build(): IOrderDatum {
+  build(): ISundaeSwapOrderDatum {
     if (!this._poolIdentifier) throw new Error('"poolIdentifier" field is missing a value.');
     if (!this._orderAddress) throw new Error('"orderAddress" field is missing a value.');
     if (!this._scooperFee) throw new Error('"scooperFee" field is missing a value.');
