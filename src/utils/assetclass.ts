@@ -44,6 +44,9 @@ export class AssetClassBuilder implements Builder<IAssetClass> {
   }
 
   build(): IAssetClass {
+    if (this._cs.length !== CURRENCY_SYMBOL_HASH_BYTE_BUFFER_LENGTH && this._cs.length !== 0)
+      throw new Error('"currencySymbol" field has invalid value.');
+
     return {
       currencySymbol: toHex(this._cs),
       tokenName: toHex(this._tkn),

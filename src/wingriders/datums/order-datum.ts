@@ -6,7 +6,7 @@ import {
   PlutusList,
 } from '@emurgo/cardano-serialization-lib-nodejs';
 import { AssetClassDecoder, Builder, Decodable, fromHex, IAssetClass, Network, toHex } from '../../utils';
-import { AddressBuilder, AddressDecoder, IAddress } from '../../utils/address';
+import { AddressDecoder, EncodableAddressBuilder, IAddress } from '../../utils/encodable-address';
 import { IWingridersOrderDatum, IWingridersStakeCredential, IWingridersSwapDirection } from './types';
 
 export class WingridersOrderDatumDecoder implements Decodable<IWingridersOrderDatum> {
@@ -86,7 +86,7 @@ export class WingridersOrderDatumBuilder implements Builder<IWingridersOrderDatu
   }
 
   beneficiary(bech32Address: string): WingridersOrderDatumBuilder {
-    this._beneficiary = AddressBuilder.new().bech32Address(bech32Address).build();
+    this._beneficiary = EncodableAddressBuilder.new().bech32Address(bech32Address).build();
     return this;
   }
 

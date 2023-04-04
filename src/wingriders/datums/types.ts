@@ -1,5 +1,5 @@
 import { Encodable, IAssetClass } from '../../utils';
-import { IAddress } from '../../utils/address';
+import { IAddress } from '../../utils/encodable-address';
 
 export interface IWingridersOrderDatum extends Encodable {
   readonly direction: IWingridersSwapDirection;
