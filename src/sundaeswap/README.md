@@ -50,25 +50,25 @@ export type IOrderRedeemerType = 'OrderScoop' | 'OrderCancel';
 
 ### Datum Builders
 
-- [`OrderAddressBuilder`](./datums/order-address.ts)
-- [`OrderDatumBuilder`](./datums/order-datum.ts)
-- [`OrderDestinationBuilder`](./datums/order-destination.ts)
-- [`OrderDepositSingleBuilder`](./datums/order-action.ts) _(untested)_
-- `OrderDepositMixedBuilder` _(not implemented)_
-- [`OrderSwapBuilder`](./datums/order-action.ts)
+- [`SundaeswapOrderAddressBuilder`](./datums/order-address.ts)
+- [`SundaeswapOrderDatumBuilder`](./datums/order-datum.ts)
+- [`SundaeswapOrderDestinationBuilder`](./datums/order-destination.ts)
+- [`SundaeswapOrderDepositSingleBuilder`](./datums/order-action.ts) _(untested)_
+- `SundaeswapOrderDepositMixedBuilder` _(not implemented)_
+- [`SundaeswapOrderSwapBuilder`](./datums/order-action.ts)
 
 ### Datum Decoders
 
-- [`OrderActionDecoder`](./datums/order-action.ts)
-- [`OrderAddressDecoder`](./datums/order-address.ts)
-- [`OrderDestinationDecoder`](./datums/order-destination.ts)
-- `OrderDepositMixedDecoder` _(not implemented)_
-- [`OrderSwapDecoder`](./datums/order-action.ts)
+- [`SundaeswapOrderActionDecoder`](./datums/order-action.ts)
+- [`SundaeswapOrderAddressDecoder`](./datums/order-address.ts)
+- [`SundaeswapOrderDestinationDecoder`](./datums/order-destination.ts)
+- `SundaeswapOrderDepositMixedDecoder` _(not implemented)_
+- [`SundaeswapOrderSwapDecoder`](./datums/order-action.ts)
 
 ### Redeemer Builders
 
-- [`OrderRedeemerBuilder`](./redeemers/order-redeemer.ts)
+- [`SundaeswapOrderRedeemerBuilder`](./redeemers/order-redeemer.ts)
 
 ### Redeemer Decoders
 
-- [`OrderRedeemerDecoder`](./redeemers/order-redeemer.ts)
+- [`SundaeswapOrderRedeemerDecoder`](./redeemers/order-redeemer.ts)

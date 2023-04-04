@@ -1,30 +1,30 @@
 import { Encodable } from '../../utils';
 import { EncodableBigInt } from '../../utils/encodable-bigint';
 
-export interface ISundaeSwapOrderAddress extends Encodable {
-  destination: ISundaeSwapOrderDestination;
+export interface ISundaeswapOrderAddress extends Encodable {
+  destination: ISundaeswapOrderDestination;
   /** Hex encoded public key hash that can cancel order in case destination is script */
   pubKeyHash?: string;
 }
 
-export interface ISundaeSwapOrderDestination extends Encodable {
+export interface ISundaeswapOrderDestination extends Encodable {
   /** Bech32 encoded destination address */
   address: string;
   datumHash?: string;
 }
 
-export type ISundaeSwapOrderAction = ISundaeSwapSwapAction | ISundaeSwapOrderWithdraw | ISundaeSwapOrderDeposit;
+export type ISundaeswapOrderAction = ISundaeswapSwapAction | ISundaeswapOrderWithdraw | ISundaeswapOrderDeposit;
 
 // describes which direction the trade is in
 export type ICoin = boolean;
-export interface ISundaeSwapSwapAction extends Encodable {
+export interface ISundaeswapSwapAction extends Encodable {
   coin: ICoin;
   depositAmount: BigInt;
   minimumReceivedAmount?: BigInt;
 }
 
-export type ISundaeSwapOrderWithdraw = EncodableBigInt;
-export type ISundaeSwapOrderDeposit = IDespositSingle | IDepositMixed;
+export type ISundaeswapOrderWithdraw = EncodableBigInt;
+export type ISundaeswapOrderDeposit = IDespositSingle | IDepositMixed;
 
 export interface IDespositSingle extends Encodable {
   coin: ICoin;
@@ -38,9 +38,9 @@ export interface IAB<T extends Encodable> extends Encodable {
   b: T;
 }
 
-export interface ISundaeSwapOrderDatum extends Encodable {
+export interface ISundaeswapOrderDatum extends Encodable {
   poolIdentifier: string;
-  orderAddress: ISundaeSwapOrderAddress;
+  orderAddress: ISundaeswapOrderAddress;
   scooperFee: BigInt;
-  action: ISundaeSwapOrderAction;
+  action: ISundaeswapOrderAction;
 }

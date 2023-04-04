@@ -1,6 +1,6 @@
 import { BigNum, ConstrPlutusData, PlutusData, PlutusList } from '@emurgo/cardano-serialization-lib-nodejs';
 import { AssetClassDecoder, Builder, Decodable, fromHex, IAssetClass } from '../../utils';
-import { IOrderRedeemer, ISundaeSwapOrderRedeemerType } from './types';
+import { IOrderRedeemer, ISundaeswapOrderRedeemerType } from './types';
 
 export class SundaeswapOrderRedeemerDecoder implements Decodable<IOrderRedeemer> {
   decode(cborHex: string): IOrderRedeemer {
@@ -23,12 +23,12 @@ export class SundaeswapOrderRedeemerDecoder implements Decodable<IOrderRedeemer>
 }
 
 export class SundaeswapOrderRedeemerBuilder implements Builder<IOrderRedeemer> {
-  private _type!: ISundaeSwapOrderRedeemerType;
+  private _type!: ISundaeswapOrderRedeemerType;
   private _scooper?: IAssetClass;
 
   static new = () => new SundaeswapOrderRedeemerBuilder();
 
-  type(redeemer: ISundaeSwapOrderRedeemerType): SundaeswapOrderRedeemerBuilder {
+  type(redeemer: ISundaeswapOrderRedeemerType): SundaeswapOrderRedeemerBuilder {
     this._type = redeemer;
     return this;
   }

@@ -1,9 +1,9 @@
 import { BigNum, ConstrPlutusData, PlutusData, PlutusList } from '@emurgo/cardano-serialization-lib-nodejs';
 import { Builder, Decodable, fromHex, Network, toHex } from '../../utils';
 import { SundaeswapOrderDestinationDecoder } from './order-destination';
-import { ISundaeSwapOrderAddress, ISundaeSwapOrderDestination } from './types';
+import { ISundaeswapOrderAddress, ISundaeswapOrderDestination } from './types';
 
-export class SundaeswapOrderAddressDecoder implements Decodable<ISundaeSwapOrderAddress> {
+export class SundaeswapOrderAddressDecoder implements Decodable<ISundaeswapOrderAddress> {
   readonly network: Network;
 
   constructor(network: Network) {
@@ -12,7 +12,7 @@ export class SundaeswapOrderAddressDecoder implements Decodable<ISundaeSwapOrder
 
   static new = (network: Network) => new SundaeswapOrderAddressDecoder(network);
 
-  decode(cborHex: string): ISundaeSwapOrderAddress {
+  decode(cborHex: string): ISundaeswapOrderAddress {
     const pd = PlutusData.from_bytes(fromHex(cborHex));
     const cpd = pd.as_constr_plutus_data();
     if (!cpd) throw new Error('Invalid constructor plutus data for order address');
@@ -36,8 +36,8 @@ export class SundaeswapOrderAddressDecoder implements Decodable<ISundaeSwapOrder
   }
 }
 
-export class SundaeswapOrderAddressBuilder implements Builder<ISundaeSwapOrderAddress> {
-  private _destination!: ISundaeSwapOrderDestination;
+export class SundaeswapOrderAddressBuilder implements Builder<ISundaeswapOrderAddress> {
+  private _destination!: ISundaeswapOrderDestination;
   private _pkh?: Uint8Array;
 
   static new = () => new SundaeswapOrderAddressBuilder();
@@ -47,12 +47,12 @@ export class SundaeswapOrderAddressBuilder implements Builder<ISundaeSwapOrderAd
     return this;
   }
 
-  destination(dest: ISundaeSwapOrderDestination): SundaeswapOrderAddressBuilder {
+  destination(dest: ISundaeswapOrderDestination): SundaeswapOrderAddressBuilder {
     this._destination = dest;
     return this;
   }
 
-  build(): ISundaeSwapOrderAddress {
+  build(): ISundaeswapOrderAddress {
     if (!this._destination) throw new Error('"destination" field is missing a value.');
     return {
       destination: this._destination,
