@@ -1,10 +1,10 @@
 import { Encodable, IAssetClass } from '../../utils';
 
-export type ISundaeSwapOrderRedeemerType = 'OrderScoop' | 'OrderCancel';
+export type ISundaeswapOrderRedeemerType = 'OrderScoop' | 'OrderCancel';
 
-export type ISundaeSwapBatcher = IAssetClass;
+export type ISundaeswapBatcher = IAssetClass;
 
 export interface IOrderRedeemer extends Encodable {
-  type: ISundaeSwapOrderRedeemerType;
-  scooper?: ISundaeSwapBatcher;
+  type: ISundaeswapOrderRedeemerType;
+  scooper?: ISundaeswapBatcher;
 }

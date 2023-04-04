@@ -1,6 +1,6 @@
 import { SUNDAESWAP_SCOOPER_FEE_LOVELACE } from '../../../sundaeswap/constant';
 import { SundaeswapOrderDatumDecoder } from '../../../sundaeswap/datums/order-datum';
-import { ISundaeSwapOrderAction, ISundaeSwapSwapAction } from '../../../sundaeswap/datums/types';
+import { ISundaeswapOrderAction, ISundaeswapSwapAction } from '../../../sundaeswap/datums/types';
 import { adaToLovelace } from '../../../utils';
 
 describe('order datum module', () => {
@@ -18,10 +18,10 @@ describe('order datum module', () => {
     expect(actual.orderAddress.destination.datumHash).toBeUndefined();
     expect(actual.orderAddress.pubKeyHash).toBeUndefined();
     expect(actual.scooperFee).toBe(SUNDAESWAP_SCOOPER_FEE_LOVELACE);
-    expect(actual.action as ISundaeSwapSwapAction).toBeTruthy();
-    expect((actual.action as ISundaeSwapSwapAction).coin).toBe(true);
-    expect((actual.action as ISundaeSwapSwapAction).depositAmount).toBe(adaToLovelace(2));
-    expect((actual.action as ISundaeSwapSwapAction).minimumReceivedAmount).toBe(BigInt(42389092));
+    expect(actual.action as ISundaeswapSwapAction).toBeTruthy();
+    expect((actual.action as ISundaeswapSwapAction).coin).toBe(true);
+    expect((actual.action as ISundaeswapSwapAction).depositAmount).toBe(adaToLovelace(2));
+    expect((actual.action as ISundaeswapSwapAction).minimumReceivedAmount).toBe(BigInt(42389092));
     expect(actual.encode().to_hex()).toBe(expected);
   });
 
@@ -39,10 +39,10 @@ describe('order datum module', () => {
     expect(actual.orderAddress.destination.datumHash).toBeUndefined();
     expect(actual.orderAddress.pubKeyHash).toBeUndefined();
     expect(actual.scooperFee).toBe(SUNDAESWAP_SCOOPER_FEE_LOVELACE);
-    expect(actual.action as ISundaeSwapOrderAction).toBeTruthy();
-    expect((actual.action as ISundaeSwapSwapAction).coin).toBe(false);
-    expect((actual.action as ISundaeSwapSwapAction).depositAmount).toBe(BigInt(20149598));
-    expect((actual.action as ISundaeSwapSwapAction).minimumReceivedAmount).toBe(BigInt(1017260));
+    expect(actual.action as ISundaeswapOrderAction).toBeTruthy();
+    expect((actual.action as ISundaeswapSwapAction).coin).toBe(false);
+    expect((actual.action as ISundaeswapSwapAction).depositAmount).toBe(BigInt(20149598));
+    expect((actual.action as ISundaeswapSwapAction).minimumReceivedAmount).toBe(BigInt(1017260));
     expect(actual.encode().to_hex()).toBe(expected);
   });
 });

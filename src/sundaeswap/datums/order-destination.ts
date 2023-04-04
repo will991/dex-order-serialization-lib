@@ -1,8 +1,8 @@
 import { BigNum, ConstrPlutusData, PlutusData, PlutusList } from '@emurgo/cardano-serialization-lib-nodejs';
 import { AddressDecoder, Builder, Decodable, EncodableAddressBuilder, fromHex, Network } from '../../utils';
-import { ISundaeSwapOrderDestination } from './types';
+import { ISundaeswapOrderDestination } from './types';
 
-export class SundaeswapOrderDestinationDecoder implements Decodable<ISundaeSwapOrderDestination> {
+export class SundaeswapOrderDestinationDecoder implements Decodable<ISundaeswapOrderDestination> {
   readonly network: Network;
 
   constructor(network: Network) {
@@ -11,7 +11,7 @@ export class SundaeswapOrderDestinationDecoder implements Decodable<ISundaeSwapO
 
   static new = (network: Network) => new SundaeswapOrderDestinationDecoder(network);
 
-  decode(cborHex: string): ISundaeSwapOrderDestination {
+  decode(cborHex: string): ISundaeswapOrderDestination {
     const pd = PlutusData.from_bytes(fromHex(cborHex));
     const cpd = pd.as_constr_plutus_data();
     if (!cpd) throw new Error('Invalid constructor plutus data for order destination');
@@ -36,7 +36,7 @@ export class SundaeswapOrderDestinationDecoder implements Decodable<ISundaeSwapO
   }
 }
 
-export class SundaeswapOrderDestinationBuilder implements Builder<ISundaeSwapOrderDestination> {
+export class SundaeswapOrderDestinationBuilder implements Builder<ISundaeswapOrderDestination> {
   private _address!: string;
   private _datumHash?: string;
 
@@ -52,7 +52,7 @@ export class SundaeswapOrderDestinationBuilder implements Builder<ISundaeSwapOrd
     return this;
   }
 
-  build(): ISundaeSwapOrderDestination {
+  build(): ISundaeswapOrderDestination {
     if (!this._address) throw new Error('"address" field is missing a value.');
     return {
       address: this._address,
