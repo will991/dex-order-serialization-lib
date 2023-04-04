@@ -8,6 +8,7 @@ import {
 } from '@emurgo/cardano-serialization-lib-nodejs';
 import { Builder, Decodable, fromHex, Network, toHex } from '../../utils';
 import { AddressDecoder, EncodableAddressBuilder } from '../../utils/encodable-address';
+import { MINSWAP_BATCHER_FEE_LOVELACE } from '../constants';
 import { MinswapOrderStepDecoder } from './order-step';
 import { IMinswapOrderDatum, IMinswapOrderStep } from './types';
 
@@ -66,7 +67,7 @@ export class MinswapOrderDatumBuilder implements Builder<IMinswapOrderDatum> {
   private _receiver!: string;
   private _orderStep!: IMinswapOrderStep;
   private _batcherFee!: BigInt;
-  private _outputAda!: BigInt;
+  private _outputAda: BigInt = MINSWAP_BATCHER_FEE_LOVELACE;
   private _receiverDatumHash?: string;
 
   static new = () => new MinswapOrderDatumBuilder();
