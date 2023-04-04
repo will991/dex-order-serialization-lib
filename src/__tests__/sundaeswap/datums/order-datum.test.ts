@@ -1,6 +1,6 @@
 import { SUNDAESWAP_SCOOPER_FEE_LOVELACE } from '../../../sundaeswap/constant';
-import { OrderDatumDecoder } from '../../../sundaeswap/datums/order-datum';
-import { IOrderAction, ISwapAction } from '../../../sundaeswap/datums/types';
+import { SundaeswapOrderDatumDecoder } from '../../../sundaeswap/datums/order-datum';
+import { ISundaeSwapOrderAction, ISundaeSwapSwapAction } from '../../../sundaeswap/datums/types';
 import { adaToLovelace } from '../../../utils';
 
 describe('order datum module', () => {
@@ -9,7 +9,7 @@ describe('order datum module', () => {
   test('decode & encode order datum for ada to min swap', () => {
     const expected =
       'd8799f4108d8799fd8799fd8799fd8799f581cc18771c59723112bef1748b89dd05de1f6906822cea0a83158f18e61ffd8799fd8799fd8799f581c29cc9d309fa9774eca1faef3432f5c292b6e75986f07ed002f1035f2ffffffffd87a80ffd87a80ff1a002625a0d8799fd879801a001e8480d8799f1a0286ce64ffffff';
-    const actual = new OrderDatumDecoder('Mainnet').decode(expected);
+    const actual = new SundaeswapOrderDatumDecoder('Mainnet').decode(expected);
     expect(actual).toBeTruthy();
     expect(actual.poolIdentifier).toBe('08');
     expect(actual.orderAddress.destination.address).toBe(
@@ -18,10 +18,10 @@ describe('order datum module', () => {
     expect(actual.orderAddress.destination.datumHash).toBeUndefined();
     expect(actual.orderAddress.pubKeyHash).toBeUndefined();
     expect(actual.scooperFee).toBe(SUNDAESWAP_SCOOPER_FEE_LOVELACE);
-    expect(actual.action as ISwapAction).toBeTruthy();
-    expect((actual.action as ISwapAction).coin).toBe(true);
-    expect((actual.action as ISwapAction).depositAmount).toBe(adaToLovelace(2));
-    expect((actual.action as ISwapAction).minimumReceivedAmount).toBe(BigInt(42389092));
+    expect(actual.action as ISundaeSwapSwapAction).toBeTruthy();
+    expect((actual.action as ISundaeSwapSwapAction).coin).toBe(true);
+    expect((actual.action as ISundaeSwapSwapAction).depositAmount).toBe(adaToLovelace(2));
+    expect((actual.action as ISundaeSwapSwapAction).minimumReceivedAmount).toBe(BigInt(42389092));
     expect(actual.encode().to_hex()).toBe(expected);
   });
 
@@ -30,7 +30,7 @@ describe('order datum module', () => {
   test('decode & encode order datum for meld to ada swap', () => {
     const expected =
       'd8799f424901d8799fd8799fd8799fd8799f581cc18771c59723112bef1748b89dd05de1f6906822cea0a83158f18e61ffd8799fd8799fd8799f581c29cc9d309fa9774eca1faef3432f5c292b6e75986f07ed002f1035f2ffffffffd87a80ffd87a80ff1a002625a0d8799fd87a801a0133755ed8799f1a000f85acffffff';
-    const actual = new OrderDatumDecoder('Mainnet').decode(expected);
+    const actual = new SundaeswapOrderDatumDecoder('Mainnet').decode(expected);
     expect(actual).toBeTruthy();
     expect(actual.poolIdentifier).toBe('4901');
     expect(actual.orderAddress.destination.address).toBe(
@@ -39,10 +39,10 @@ describe('order datum module', () => {
     expect(actual.orderAddress.destination.datumHash).toBeUndefined();
     expect(actual.orderAddress.pubKeyHash).toBeUndefined();
     expect(actual.scooperFee).toBe(SUNDAESWAP_SCOOPER_FEE_LOVELACE);
-    expect(actual.action as IOrderAction).toBeTruthy();
-    expect((actual.action as ISwapAction).coin).toBe(false);
-    expect((actual.action as ISwapAction).depositAmount).toBe(BigInt(20149598));
-    expect((actual.action as ISwapAction).minimumReceivedAmount).toBe(BigInt(1017260));
+    expect(actual.action as ISundaeSwapOrderAction).toBeTruthy();
+    expect((actual.action as ISundaeSwapSwapAction).coin).toBe(false);
+    expect((actual.action as ISundaeSwapSwapAction).depositAmount).toBe(BigInt(20149598));
+    expect((actual.action as ISundaeSwapSwapAction).minimumReceivedAmount).toBe(BigInt(1017260));
     expect(actual.encode().to_hex()).toBe(expected);
   });
 });
