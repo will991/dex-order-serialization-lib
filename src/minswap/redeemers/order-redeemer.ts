@@ -6,7 +6,7 @@ export class MinswapOrderRedeemerDecoder implements Decodable<IMinswapOrderRedee
   decode(cborHex: string): IMinswapOrderRedeemer {
     const pd = PlutusData.from_bytes(fromHex(cborHex));
     const cpd = pd.as_constr_plutus_data();
-    if (!cpd) throw new Error('Invalid constructor plutus data for order datum');
+    if (!cpd) throw new Error('Invalid constructor plutus data for order redeemer');
 
     switch (cpd.alternative().to_str()) {
       case '0':
