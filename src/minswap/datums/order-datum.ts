@@ -8,7 +8,7 @@ import {
 } from '@emurgo/cardano-serialization-lib-nodejs';
 import { Builder, Decodable, fromHex, Network, toHex } from '../../utils';
 import { AddressDecoder, EncodableAddressBuilder } from '../../utils/encodable-address';
-import { MINSWAP_BATCHER_FEE_LOVELACE } from '../constants';
+import { MINSWAP_BATCHER_FEE_LOVELACE } from '../constant';
 import { MinswapOrderStepDecoder } from './order-step';
 import { IMinswapOrderDatum, IMinswapOrderStep } from './types';
 
