@@ -1,11 +1,11 @@
 import {
-  BigInt as CSLBigInt,
   BigNum,
+  BigInt as CSLBigInt,
   ConstrPlutusData,
   PlutusData,
   PlutusList,
 } from '@emurgo/cardano-serialization-lib-nodejs';
-import { Builder, Decodable, Encodable, fromHex } from '../../utils';
+import { Builder, Decodable, Encodable, ManagedFreeableScope, fromHex, toHex } from '../../utils';
 import { EncodableBigInt } from '../../utils/encodable-bigint';
 import { ICoin, IDespositSingle, ISundaeswapOrderAction, ISundaeswapOrderWithdraw } from './types';
 
@@ -106,21 +106,27 @@ export class SundaeswapOrderSwapBuilder extends SundaeswapOrderActionBuilder<ISu
       minimumReceivedAmount: this._minimumReceivedAmount,
 
       encode: () => {
+        const mfs = new ManagedFreeableScope();
         const fields = PlutusList.new();
+        mfs.manage(fields);
+
         const coinAlternative = this._coin ? BigNum.zero() : BigNum.one();
+        mfs.manage(coinAlternative);
         fields.add(PlutusData.new_empty_constr_plutus_data(coinAlternative));
         fields.add(PlutusData.new_integer(CSLBigInt.from_str(this._amount.toString())));
 
         if (this._minimumReceivedAmount) {
           const nestedFields = PlutusList.new();
-          const mrAmount = PlutusData.new_integer(CSLBigInt.from_str(this._minimumReceivedAmount.toString()));
-          nestedFields.add(mrAmount);
+          mfs.manage(nestedFields);
+          nestedFields.add(PlutusData.new_integer(CSLBigInt.from_str(this._minimumReceivedAmount.toString())));
           fields.add(PlutusData.new_constr_plutus_data(ConstrPlutusData.new(BigNum.zero(), nestedFields)));
         } else {
           fields.add(PlutusData.new_empty_constr_plutus_data(BigNum.one()));
         }
 
-        return PlutusData.new_constr_plutus_data(ConstrPlutusData.new(BigNum.zero(), fields));
+        const result = toHex(PlutusData.new_constr_plutus_data(ConstrPlutusData.new(BigNum.zero(), fields)).to_bytes());
+        mfs.dispose();
+        return result;
       },
     };
   }
@@ -148,12 +154,17 @@ export class SundaeswapOrderDepositSingleBuilder extends SundaeswapOrderActionBu
       amount: this._amount,
 
       encode: () => {
+        const mfs = new ManagedFreeableScope();
         const fields = PlutusList.new();
+        mfs.manage(fields);
         const coinAlternative = this._coin ? BigNum.zero() : BigNum.one();
+        mfs.manage(coinAlternative);
         fields.add(PlutusData.new_empty_constr_plutus_data(coinAlternative));
         fields.add(PlutusData.new_integer(CSLBigInt.from_str(this._amount.toString())));
 
-        return PlutusData.new_constr_plutus_data(ConstrPlutusData.new(BigNum.zero(), fields));
+        const result = toHex(PlutusData.new_constr_plutus_data(ConstrPlutusData.new(BigNum.zero(), fields)).to_bytes());
+        mfs.dispose();
+        return result;
       },
     };
   }

@@ -1,14 +1,21 @@
 import { BigNum, ConstrPlutusData, PlutusData, PlutusList } from '@emurgo/cardano-serialization-lib-nodejs';
-import { Builder, Decodable, fromHex } from '../../utils';
+import { Builder, Decodable, fromHex, toHex } from '../../utils';
+import { ManagedFreeableScope } from '../../utils/freeable';
 import { IMinswapOrderRedeemer, IMinswapOrderRedeemerType } from './types';
 
 export class MinswapOrderRedeemerDecoder implements Decodable<IMinswapOrderRedeemer> {
   decode(cborHex: string): IMinswapOrderRedeemer {
+    const mfs = new ManagedFreeableScope();
     const pd = PlutusData.from_bytes(fromHex(cborHex));
-    const cpd = pd.as_constr_plutus_data();
-    if (!cpd) throw new Error('Invalid constructor plutus data for order redeemer');
+    mfs.manage(pd);
+    const alternative = pd.as_constr_plutus_data()?.alternative().to_str();
 
-    switch (cpd.alternative().to_str()) {
+    mfs.dispose();
+    if (!alternative) {
+      throw new Error('Invalid constructor plutus data for order redeemer');
+    }
+
+    switch (alternative) {
       case '0':
         return MinswapOrderRedeemerBuilder.new().type('ApplyOrder').build();
       case '1':
@@ -34,8 +41,11 @@ export class MinswapOrderRedeemerBuilder implements Builder<IMinswapOrderRedeeme
     return {
       type: this._type,
       encode: () => {
-        const alternative: BigNum = this._type === 'ApplyOrder' ? BigNum.zero() : BigNum.one();
-        return PlutusData.new_constr_plutus_data(ConstrPlutusData.new(alternative, PlutusList.new()));
+        return toHex(
+          PlutusData.new_constr_plutus_data(
+            ConstrPlutusData.new(this._type === 'ApplyOrder' ? BigNum.zero() : BigNum.one(), PlutusList.new()),
+          ).to_bytes(),
+        );
       },
     };
   }

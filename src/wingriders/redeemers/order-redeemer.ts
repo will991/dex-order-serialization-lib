@@ -1,14 +1,10 @@
 import { BigNum, PlutusData } from '@emurgo/cardano-serialization-lib-nodejs';
-import { Builder, Decodable, fromHex } from '../../utils';
+import { Builder, Decodable, fromHex, toHex } from '../../utils';
 import { IWingridersReclaim } from './types';
 
 export class WingridersOrderRedeemerDecoder implements Decodable<IWingridersReclaim> {
   decode(cborHex: string): IWingridersReclaim {
-    const pd = PlutusData.from_bytes(fromHex(cborHex));
-    const cpd = pd.as_constr_plutus_data();
-    if (!cpd) throw new Error('Invalid constructor plutus data for order redeemer');
-
-    switch (cpd.alternative().to_str()) {
+    switch (PlutusData.from_bytes(fromHex(cborHex)).as_constr_plutus_data()?.alternative().to_str() ?? '') {
       case '1':
         return WingridersOrderRedeemerBuilder.new().build();
       default:
@@ -23,7 +19,7 @@ export class WingridersOrderRedeemerBuilder implements Builder<IWingridersReclai
   build(): IWingridersReclaim {
     return {
       encode: () => {
-        return PlutusData.new_empty_constr_plutus_data(BigNum.one());
+        return toHex(PlutusData.new_empty_constr_plutus_data(BigNum.one()).to_bytes());
       },
     };
   }

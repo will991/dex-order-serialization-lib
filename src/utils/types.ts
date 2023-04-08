@@ -1,12 +1,12 @@
-import { PlutusData } from '@emurgo/cardano-serialization-lib-nodejs';
-
+/** hex encoded cbor */
+export type PlutusDataBytes = string;
 export type Network = 'Testnet' | 'Mainnet';
 
 /**
  * Defines a type that can be serialized to PlutusData and eventually to cbor.
  */
 export interface Encodable {
-  encode(): PlutusData;
+  encode(): PlutusDataBytes;
 }
 
 /**
@@ -27,6 +27,11 @@ export interface Builder<T> {
 export interface IAssetClass extends Encodable {
   /** Base16 encoded currency symbol */
   readonly currencySymbol: string;
-  /** Base16 encoded token name */
-  readonly tokenName: string;
+  /** Base16 encoded asset identifier */
+  readonly assetId: string;
+}
+
+/** Usually refers to an object that was returned by CSL. */
+export interface Freeable {
+  free: () => void;
 }

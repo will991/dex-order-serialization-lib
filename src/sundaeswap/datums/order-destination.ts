@@ -1,5 +1,15 @@
 import { BigNum, ConstrPlutusData, PlutusData, PlutusList } from '@emurgo/cardano-serialization-lib-nodejs';
-import { AddressDecoder, Builder, Decodable, EncodableAddressBuilder, fromHex, Network } from '../../utils';
+import {
+  AddressDecoder,
+  Builder,
+  Decodable,
+  EncodableAddressBuilder,
+  ManagedFreeableScope,
+  Network,
+  fromHex,
+  toHex,
+  toPlutusData,
+} from '../../utils';
 import { ISundaeswapOrderDestination } from './types';
 
 export class SundaeswapOrderDestinationDecoder implements Decodable<ISundaeswapOrderDestination> {
@@ -25,11 +35,11 @@ export class SundaeswapOrderDestinationDecoder implements Decodable<ISundaeswapO
     switch (datumHashConstr.alternative().to_str()) {
       case '0':
         return SundaeswapOrderDestinationBuilder.new()
-          .bech32Address(address.to_bech32())
+          .bech32Address(address)
           .datumHash(datumHashConstr.data().get(0).to_hex())
           .build();
       case '1':
-        return SundaeswapOrderDestinationBuilder.new().bech32Address(address.to_bech32()).build();
+        return SundaeswapOrderDestinationBuilder.new().bech32Address(address).build();
       default:
         throw new Error(`Unknown datum hash constructor alternative: ${datumHashConstr.alternative().to_str()}`);
     }
@@ -59,19 +69,24 @@ export class SundaeswapOrderDestinationBuilder implements Builder<ISundaeswapOrd
       datumHash: this._datumHash,
 
       encode: () => {
-        const addressObj = EncodableAddressBuilder.new().bech32Address(this._address).build().encode();
+        const mfs = new ManagedFreeableScope();
         const fields = PlutusList.new();
-        fields.add(addressObj);
+        mfs.manage(fields);
+
+        fields.add(toPlutusData(EncodableAddressBuilder.new().bech32Address(this._address).build().encode()));
 
         if (this._datumHash) {
           const f = PlutusList.new();
+          mfs.manage(f);
           f.add(PlutusData.from_hex(this._datumHash));
           fields.add(PlutusData.new_constr_plutus_data(ConstrPlutusData.new(BigNum.zero(), f)));
         } else {
           fields.add(PlutusData.new_empty_constr_plutus_data(BigNum.one()));
         }
 
-        return PlutusData.new_constr_plutus_data(ConstrPlutusData.new(BigNum.zero(), fields));
+        const result = toHex(PlutusData.new_constr_plutus_data(ConstrPlutusData.new(BigNum.zero(), fields)).to_bytes());
+        mfs.dispose();
+        return result;
       },
     };
   }

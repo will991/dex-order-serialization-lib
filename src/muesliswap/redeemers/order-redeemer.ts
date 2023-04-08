@@ -1,14 +1,10 @@
 import { BigNum, PlutusData } from '@emurgo/cardano-serialization-lib-nodejs';
-import { Builder, Decodable, fromHex } from '../../utils';
+import { Builder, Decodable, fromHex, toHex } from '../../utils';
 import { IMuesliswapOrderRedeemer, IMuesliswapOrderRedeemerType } from './types';
 
 export class MuesliswapOrderRedeemerDecoder implements Decodable<IMuesliswapOrderRedeemer> {
   decode(cborHex: string): IMuesliswapOrderRedeemer {
-    const pd = PlutusData.from_bytes(fromHex(cborHex));
-    const cpd = pd.as_constr_plutus_data();
-    if (!cpd) throw new Error('Invalid constructor plutus data for order redeemer');
-
-    switch (cpd.alternative().to_str()) {
+    switch (PlutusData.from_bytes(fromHex(cborHex)).as_constr_plutus_data()?.alternative().to_str() ?? '') {
       case '0':
         return MuesliswapOrderRedeemerBuilder.new().type('Cancel').build();
       default:
@@ -32,7 +28,7 @@ export class MuesliswapOrderRedeemerBuilder implements Builder<IMuesliswapOrderR
       type: this._type,
 
       encode: () => {
-        return PlutusData.new_empty_constr_plutus_data(BigNum.zero());
+        return toHex(PlutusData.new_empty_constr_plutus_data(BigNum.zero()).to_bytes());
       },
     };
   }

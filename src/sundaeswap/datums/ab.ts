@@ -1,5 +1,6 @@
 import { BigNum, ConstrPlutusData, PlutusData, PlutusList } from '@emurgo/cardano-serialization-lib-nodejs';
-import { Builder, Encodable } from '../../utils';
+import { Builder, Encodable, toHex } from '../../utils';
+import { toPlutusData } from '../../utils/plutusdata';
 import { IAB } from './types';
 
 export class ABBuilder<T extends Encodable> implements Builder<IAB<T>> {
@@ -26,9 +27,9 @@ export class ABBuilder<T extends Encodable> implements Builder<IAB<T>> {
 
       encode: () => {
         const fields = PlutusList.new();
-        fields.add(this._a.encode());
-        fields.add(this._b.encode());
-        return PlutusData.new_constr_plutus_data(ConstrPlutusData.new(BigNum.zero(), fields));
+        fields.add(toPlutusData(this._a.encode()));
+        fields.add(toPlutusData(this._b.encode()));
+        return toHex(PlutusData.new_constr_plutus_data(ConstrPlutusData.new(BigNum.zero(), fields)).to_bytes());
       },
     };
   }

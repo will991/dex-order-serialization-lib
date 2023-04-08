@@ -1,21 +1,24 @@
 import {
-  BigInt as CSLBigInt,
   BigNum,
+  BigInt as CSLBigInt,
   ConstrPlutusData,
   PlutusData,
   PlutusList,
 } from '@emurgo/cardano-serialization-lib-nodejs';
-import { CURRENCY_SYMBOL_HASH_BYTE_BUFFER_LENGTH } from '../../constant';
 import {
   AddressDecoder,
   Builder,
   Decodable,
   EncodableAddressBuilder,
-  fromHex,
   IAddress,
   Network,
+  PlutusDataBytes,
+  fromHex,
   toHex,
 } from '../../utils';
+import { hasValidCurrencySymbolLength } from '../../utils/currencysymbol';
+import { ManagedFreeableScope } from '../../utils/freeable';
+import { toPlutusData } from '../../utils/plutusdata';
 import { IMuesliswapOrderDatum } from './types';
 
 export class MuesliswapOrderDatumDecoder implements Decodable<IMuesliswapOrderDatum> {
@@ -28,42 +31,71 @@ export class MuesliswapOrderDatumDecoder implements Decodable<IMuesliswapOrderDa
   static new = (network: Network) => new MuesliswapOrderDatumDecoder(network);
 
   decode(cborHex: string): IMuesliswapOrderDatum {
-    const pd = PlutusData.from_bytes(fromHex(cborHex));
-    const cpd = pd.as_constr_plutus_data();
-    if (!cpd) throw new Error('Invalid constructor plutus data for muesliswap order datum');
-    const fields = cpd.data();
-    if (fields.len() !== 1) throw new Error(`Expected exactly 1 fields for order datum, received: ${fields.len()}`);
-    const nestedConst = fields.get(0).as_constr_plutus_data();
-    if (!nestedConst) throw new Error('Invalid constructor plutus data for muesliswap order datum');
-    const nestedFields = nestedConst.data();
-    if (nestedFields.len() !== 8)
-      throw new Error(`Expected exactly 8 fields for order datum, received: ${fields.len()}`);
+    const mfs = new ManagedFreeableScope();
+
+    const fields = PlutusData.from_bytes(fromHex(cborHex)).as_constr_plutus_data()?.data();
+    mfs.manage(fields);
+
+    if (!fields || fields.len() !== 1) {
+      const len = fields?.len() ?? 0;
+      mfs.dispose();
+      throw new Error(`Expected exactly 1 fields for order datum, received: ${len}`);
+    }
+    const nestedFields = fields.get(0).as_constr_plutus_data()?.data();
+    if (!nestedFields || nestedFields.len() !== 8) {
+      const len = fields.len() ?? 0;
+      mfs.dispose();
+      throw new Error(`Expected exactly 8 fields for order datum, received: ${len}`);
+    }
 
     const sender = new AddressDecoder(this.network).decode(nestedFields.get(0).to_hex());
     const buyCurrencySymbol = nestedFields.get(1).as_bytes();
-    if (!buyCurrencySymbol) throw new Error('Expected buyCurrencySymbol field.');
-    const buyAssetName = nestedFields.get(2).as_bytes();
-    if (!buyAssetName) throw new Error('Expected buyAssetName field.');
-    const sellCurrencySymbol = nestedFields.get(3).as_bytes();
-    if (!sellCurrencySymbol) throw new Error('Expected sellCurrencySymbol field.');
-    const sellAssetName = nestedFields.get(4).as_bytes();
-    if (!sellAssetName) throw new Error('Expected sellAssetName field.');
-    const buyAmount = nestedFields.get(5).as_integer();
-    if (!buyAmount) throw new Error('Expected buyAmount integer field.');
-    const allowPartial = nestedFields.get(6).as_constr_plutus_data()?.alternative();
-    if (!allowPartial) throw new Error('Expected allowPartial plutus constructor.');
-    const fee = nestedFields.get(7).as_integer();
-    if (!fee) throw new Error('Expected fe integer field.');
+    if (!buyCurrencySymbol) {
+      mfs.dispose();
+      throw new Error('Expected buyCurrencySymbol field.');
+    }
 
+    const buyAssetName = nestedFields.get(2).as_bytes();
+    if (!buyAssetName) {
+      mfs.dispose();
+      throw new Error('Expected buyAssetName field.');
+    }
+    const sellCurrencySymbol = nestedFields.get(3).as_bytes();
+    if (!sellCurrencySymbol) {
+      mfs.dispose();
+      throw new Error('Expected sellCurrencySymbol field.');
+    }
+    const sellAssetName = nestedFields.get(4).as_bytes();
+    if (!sellAssetName) {
+      mfs.dispose();
+      throw new Error('Expected sellAssetName field.');
+    }
+    const buyAmount = nestedFields.get(5).as_integer()?.to_str();
+    if (!buyAmount) {
+      mfs.dispose();
+      throw new Error('Expected buyAmount integer field.');
+    }
+    const allowPartial = nestedFields.get(6).as_constr_plutus_data()?.alternative().to_str();
+    if (!allowPartial) {
+      mfs.dispose();
+      throw new Error('Expected allowPartial plutus constructor.');
+    }
+    const fee = nestedFields.get(7).as_integer()?.to_str();
+    if (!fee) {
+      mfs.dispose();
+      throw new Error('Expected fe integer field.');
+    }
+
+    mfs.dispose();
     return MuesliswapOrderDatumBuilder.new(this.network)
-      .creator(sender.to_bech32())
+      .creator(sender)
       .buyCurrencySymbol(toHex(buyCurrencySymbol))
       .buyAssetName(toHex(buyAssetName))
-      .buyAmount(BigInt(buyAmount.to_str()))
+      .buyAmount(BigInt(buyAmount))
       .sellCurrencySymbol(toHex(sellCurrencySymbol))
       .sellAssetName(toHex(sellAssetName))
-      .allowPartial(allowPartial.is_zero() == false)
-      .fee(BigInt(fee.to_str()))
+      .allowPartial(allowPartial === '1')
+      .fee(BigInt(fee))
       .build();
   }
 }
@@ -127,17 +159,11 @@ export class MuesliswapOrderDatumBuilder implements Builder<IMuesliswapOrderDatu
 
   build(): IMuesliswapOrderDatum {
     if (!this._creator) throw new Error('"creator" field is missing a value.');
-    if (
-      this._buyCurrencySymbol.length !== CURRENCY_SYMBOL_HASH_BYTE_BUFFER_LENGTH &&
-      this._sellCurrencySymbol.length !== 0
-    )
+    if (!hasValidCurrencySymbolLength(this._buyCurrencySymbol))
       throw new Error('"buyCurrencySymbol" field is invalid.');
     if (this._buyAssetName === undefined) throw new Error('"buyAssetName" field is missing a value.');
     if (!this._buyAmount) throw new Error('"buyAmount" field is missing a value.');
-    if (
-      this._sellCurrencySymbol.length !== CURRENCY_SYMBOL_HASH_BYTE_BUFFER_LENGTH &&
-      this._sellCurrencySymbol.length !== 0
-    )
+    if (!hasValidCurrencySymbolLength(this._sellCurrencySymbol))
       throw new Error('"sellCurrencySymbol" field is invalid.');
     if (this._sellAssetName === undefined) throw new Error('"sellAssetName" field is missing a value.');
     if (!this._allowPartial) throw new Error('"allowPartial" field is missing a value.');
@@ -153,14 +179,18 @@ export class MuesliswapOrderDatumBuilder implements Builder<IMuesliswapOrderDatu
       allowPartial: this._allowPartial,
       fee: this._fee,
 
-      encode(): PlutusData {
+      encode(): PlutusDataBytes {
+        const mfs = new ManagedFreeableScope();
         const fields = PlutusList.new();
-        fields.add(this.creator.encode());
+        mfs.manage(fields);
+
+        fields.add(toPlutusData(this.creator.encode()));
         fields.add(PlutusData.new_bytes(fromHex(this.buyCurrencySymbol)));
         fields.add(PlutusData.new_bytes(fromHex(this.buyAssetName)));
         fields.add(PlutusData.new_bytes(fromHex(this.sellCurrencySymbol)));
         fields.add(PlutusData.new_bytes(fromHex(this.sellAssetName)));
         fields.add(PlutusData.new_integer(CSLBigInt.from_str(this.buyAmount.toString())));
+
         if (this.allowPartial) {
           fields.add(PlutusData.new_empty_constr_plutus_data(BigNum.one()));
         } else {
@@ -169,8 +199,14 @@ export class MuesliswapOrderDatumBuilder implements Builder<IMuesliswapOrderDatu
         fields.add(PlutusData.new_integer(CSLBigInt.from_str(this.fee.toString())));
 
         const nestedFields = PlutusList.new();
+        mfs.manage(nestedFields);
         nestedFields.add(PlutusData.new_constr_plutus_data(ConstrPlutusData.new(BigNum.zero(), fields)));
-        return PlutusData.new_constr_plutus_data(ConstrPlutusData.new(BigNum.zero(), nestedFields));
+
+        const result = toHex(
+          PlutusData.new_constr_plutus_data(ConstrPlutusData.new(BigNum.zero(), nestedFields)).to_bytes(),
+        );
+        mfs.dispose();
+        return result;
       },
     };
   }

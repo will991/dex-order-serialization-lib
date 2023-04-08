@@ -1,5 +1,6 @@
 import { BigInt as CSLBigInt, PlutusData } from '@emurgo/cardano-serialization-lib-nodejs';
-import { Encodable } from './types';
+import { toHex } from './base16';
+import { Encodable, PlutusDataBytes } from './types';
 
 export class EncodableBigInt implements Encodable {
   readonly i: BigInt;
@@ -8,7 +9,7 @@ export class EncodableBigInt implements Encodable {
     this.i = i;
   }
 
-  encode(): PlutusData {
-    return PlutusData.new_integer(CSLBigInt.from_str(this.i.toString()));
+  encode(): PlutusDataBytes {
+    return toHex(PlutusData.new_integer(CSLBigInt.from_str(this.i.toString())).to_bytes());
   }
 }

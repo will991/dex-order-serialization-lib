@@ -14,7 +14,7 @@ describe('order datum module', () => {
   test('encode order datum for wingriders swap', () => {
     const wingriders = AssetClassBuilder.new()
       .currencySymbol('c0ee29a85b13209423b10447d3c2e6a50641a15c57770e27cb9d5073')
-      .tokenName('57696e67526964657273')
+      .assetId('57696e67526964657273')
       .build();
     const addr = Address.from_bech32(
       'addr1q8qcwuw9ju33z2l0zayt38wsthsldyrgyt82p2p3trccucffejwnp8afwa8v58aw7dpj7hpf9dh8txr0qlksqtcsxheq50tx0z',
@@ -29,7 +29,7 @@ describe('order datum module', () => {
       .assetB(wingriders)
       .minAmount(BigInt(6421137))
       .build();
-    expect(order.encode().to_hex()).toBe(
+    expect(order.encode()).toBe(
       'd8799fd8799fd8799fd8799f581cc18771c59723112bef1748b89dd05de1f6906822cea0a83158f18e61ffd8799fd8799fd8799f581c29cc9d309fa9774eca1faef3432f5c292b6e75986f07ed002f1035f2ffffffff581cc18771c59723112bef1748b89dd05de1f6906822cea0a83158f18e611b00000185127a008cd8799fd8799f4040ffd8799f581cc0ee29a85b13209423b10447d3c2e6a50641a15c57770e27cb9d50734a57696e67526964657273ffffffd8799fd879801a0061fa91ffff',
     );
   });
@@ -37,7 +37,7 @@ describe('order datum module', () => {
   test('decode mainnet order datum for wingriders swap', () => {
     const wingriders = AssetClassBuilder.new()
       .currencySymbol('c0ee29a85b13209423b10447d3c2e6a50641a15c57770e27cb9d5073')
-      .tokenName('57696e67526964657273')
+      .assetId('57696e67526964657273')
       .build();
     const expected =
       'd8799fd8799fd8799fd8799f581cc18771c59723112bef1748b89dd05de1f6906822cea0a83158f18e61ffd8799fd8799fd8799f581c29cc9d309fa9774eca1faef3432f5c292b6e75986f07ed002f1035f2ffffffff581cc18771c59723112bef1748b89dd05de1f6906822cea0a83158f18e611b00000185127a008cd8799fd8799f4040ffd8799f581cc0ee29a85b13209423b10447d3c2e6a50641a15c57770e27cb9d50734a57696e67526964657273ffffffd8799fd879801a0061fa91ffff';
@@ -49,12 +49,12 @@ describe('order datum module', () => {
     expect(actual.direction).toBe(IWingridersSwapDirection.ATOB);
     expect(actual.deadline).toBe(BigInt(1671052263564));
     expect(actual.lpAssetA.currencySymbol).toBe(AssetClassBuilder.ada().currencySymbol);
-    expect(actual.lpAssetA.tokenName).toBe(AssetClassBuilder.ada().tokenName);
+    expect(actual.lpAssetA.assetId).toBe(AssetClassBuilder.ada().assetId);
     expect(actual.lpAssetB.currencySymbol).toBe(wingriders.currencySymbol);
-    expect(actual.lpAssetB.tokenName).toBe(wingriders.tokenName);
+    expect(actual.lpAssetB.assetId).toBe(wingriders.assetId);
     expect(actual.minAmount).toBe(BigInt(6421137));
     expect(actual.owner).toBe('c18771c59723112bef1748b89dd05de1f6906822cea0a83158f18e61');
 
-    expect(actual.encode().to_hex()).toBe(expected);
+    expect(actual.encode()).toBe(expected);
   });
 });
