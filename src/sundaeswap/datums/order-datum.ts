@@ -22,31 +22,32 @@ export class SundaeswapOrderDatumDecoder implements Decodable<ISundaeswapOrderDa
 
   decode(cborHex: string): ISundaeswapOrderDatum {
     const mfs = new ManagedFreeableScope();
-    const fields = PlutusData.from_bytes(fromHex(cborHex)).as_constr_plutus_data()?.data();
-    mfs.manage(fields);
+    const fields = mfs.manage(
+      mfs.manage(mfs.manage(PlutusData.from_bytes(fromHex(cborHex))).as_constr_plutus_data())?.data(),
+    );
     if (!fields || fields.len() !== 4) {
       const len = fields?.len() ?? 0;
       mfs.dispose();
       throw new Error(`Expected exactly 4 fields for order datum, received: ${len}`);
     }
-    const poolIdBytes = fields.get(0).as_bytes();
+    const poolIdBytes = mfs.manage(fields.get(0)).as_bytes();
     if (!poolIdBytes) {
       mfs.dispose();
       throw new Error('No byte buffer found for pool identifier');
     }
-    const addr = fields.get(1).to_hex();
+    const addr = mfs.manage(fields.get(1)).to_hex();
     const orderAddress = new SundaeswapOrderAddressDecoder(this.network).decode(addr);
-    const scooperFee = fields.get(2).as_integer();
+    const scooperFee = mfs.manage(mfs.manage(fields.get(2)).as_integer())?.to_str();
     if (!scooperFee) {
       mfs.dispose();
       throw new Error('No byte buffer found for scooper fee');
     }
-    const action = new SundaeswapOrderActionDecoder().decode(fields.get(3).to_hex());
+    const action = new SundaeswapOrderActionDecoder().decode(mfs.manage(fields.get(3)).to_hex());
 
     return SundaeswapOrderDatumBuilder.new()
       .poolIdentifier(toHex(poolIdBytes))
       .orderAddress(orderAddress)
-      .scooperFee(BigInt(scooperFee.to_str()))
+      .scooperFee(BigInt(scooperFee))
       .action(action)
       .build();
   }
@@ -95,15 +96,20 @@ export class SundaeswapOrderDatumBuilder implements Builder<ISundaeswapOrderDatu
 
       encode: () => {
         const mfs = new ManagedFreeableScope();
-        const fields = PlutusList.new();
-        mfs.manage(fields);
+        const fields = mfs.manage(PlutusList.new());
 
-        fields.add(PlutusData.new_bytes(fromHex(this._poolIdentifier)));
-        fields.add(toPlutusData(this._orderAddress.encode()));
-        fields.add(PlutusData.new_integer(CSLBigInt.from_str(this._scooperFee.toString())));
-        fields.add(toPlutusData(this._action.encode()));
+        fields.add(mfs.manage(PlutusData.new_bytes(fromHex(this._poolIdentifier))));
+        fields.add(mfs.manage(toPlutusData(this._orderAddress.encode())));
+        fields.add(mfs.manage(PlutusData.new_integer(mfs.manage(CSLBigInt.from_str(this._scooperFee.toString())))));
+        fields.add(mfs.manage(toPlutusData(this._action.encode())));
 
-        const result = toHex(PlutusData.new_constr_plutus_data(ConstrPlutusData.new(BigNum.zero(), fields)).to_bytes());
+        const result = toHex(
+          mfs
+            .manage(
+              PlutusData.new_constr_plutus_data(mfs.manage(ConstrPlutusData.new(mfs.manage(BigNum.zero()), fields))),
+            )
+            .to_bytes(),
+        );
         mfs.dispose();
         return result;
       },

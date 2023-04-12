@@ -6,10 +6,14 @@ import { IMinswapOrderRedeemer, IMinswapOrderRedeemerType } from './types';
 export class MinswapOrderRedeemerDecoder implements Decodable<IMinswapOrderRedeemer> {
   decode(cborHex: string): IMinswapOrderRedeemer {
     const mfs = new ManagedFreeableScope();
-    const pd = PlutusData.from_bytes(fromHex(cborHex));
-    mfs.manage(pd);
-    const alternative = pd.as_constr_plutus_data()?.alternative().to_str();
+    const pd = mfs.manage(PlutusData.from_bytes(fromHex(cborHex)));
+    const cpd = mfs.manage(pd.as_constr_plutus_data());
 
+    if (!cpd) {
+      mfs.dispose();
+      throw new Error('Expected plutus constr for minswap order redeemer');
+    }
+    const alternative = mfs.manage(cpd.alternative()).to_str();
     mfs.dispose();
     if (!alternative) {
       throw new Error('Invalid constructor plutus data for order redeemer');
@@ -41,11 +45,24 @@ export class MinswapOrderRedeemerBuilder implements Builder<IMinswapOrderRedeeme
     return {
       type: this._type,
       encode: () => {
-        return toHex(
-          PlutusData.new_constr_plutus_data(
-            ConstrPlutusData.new(this._type === 'ApplyOrder' ? BigNum.zero() : BigNum.one(), PlutusList.new()),
-          ).to_bytes(),
+        const mfs = new ManagedFreeableScope();
+        const result = toHex(
+          mfs
+            .manage(
+              PlutusData.new_constr_plutus_data(
+                mfs.manage(
+                  ConstrPlutusData.new(
+                    this._type === 'ApplyOrder' ? mfs.manage(BigNum.zero()) : mfs.manage(BigNum.one()),
+                    mfs.manage(PlutusList.new()),
+                  ),
+                ),
+              ),
+            )
+            .to_bytes(),
         );
+
+        mfs.dispose();
+        return result;
       },
     };
   }

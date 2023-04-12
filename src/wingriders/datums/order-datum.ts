@@ -30,55 +30,61 @@ export class WingridersOrderDatumDecoder implements Decodable<IWingridersOrderDa
 
   decode(cborHex: string): IWingridersOrderDatum {
     const mfs = new ManagedFreeableScope();
-    const fields = PlutusData.from_bytes(fromHex(cborHex)).as_constr_plutus_data()?.data();
-    mfs.manage(fields);
-    if (!fields) throw new Error('Invalid constructor plutus data for order datum');
+    const fields = mfs.manage(
+      mfs.manage(mfs.manage(PlutusData.from_bytes(fromHex(cborHex))).as_constr_plutus_data())?.data(),
+    );
+    if (!fields) {
+      mfs.dispose();
+      throw new Error('Invalid constructor plutus data for order datum');
+    }
 
-    const metadataFields = fields.get(0).as_constr_plutus_data()?.data();
-    mfs.manage(metadataFields);
+    const metadataFields = mfs.manage(mfs.manage(mfs.manage(fields.get(0)).as_constr_plutus_data())?.data());
     if (!metadataFields || metadataFields?.len() !== 4) {
       const len = metadataFields?.len() ?? 0;
       mfs.dispose();
       throw new Error(`Expected exactly 4 fields for order datum, received: ${len}`);
     }
 
-    const swapFields = fields.get(1).as_constr_plutus_data()?.data();
-    mfs.manage(swapFields);
+    const swapFields = mfs.manage(mfs.manage(mfs.manage(fields.get(1)).as_constr_plutus_data())?.data());
     if (!swapFields) {
       mfs.dispose();
       throw new Error('Expected second field to be swap data');
     }
 
     const beneficiary = new AddressDecoder(this.network).decode(
-      metadataFields.get(0).as_constr_plutus_data()!.to_hex(),
+      mfs.manage(mfs.manage(metadataFields.get(0)).as_constr_plutus_data())!.to_hex(),
     );
 
-    const owner = metadataFields.get(1).as_bytes();
+    const owner = mfs.manage(metadataFields.get(1)).as_bytes();
     if (!owner) {
       mfs.dispose();
       throw new Error(`Expected byte array for owner field`);
     }
 
-    const deadline = metadataFields.get(2).as_integer()?.to_str();
+    const deadline = mfs.manage(mfs.manage(metadataFields.get(2)).as_integer())?.to_str();
     if (!deadline) {
       mfs.dispose();
       throw new Error(`Expected big integer for deadline field`);
     }
 
-    const pair = metadataFields.get(3).as_constr_plutus_data();
+    const pair = mfs.manage(mfs.manage(metadataFields.get(3)).as_constr_plutus_data());
     if (!pair) {
       mfs.dispose();
       throw new Error('Expected plutus constr for token pair');
     }
 
-    const assetA = new AssetClassDecoder().decode(pair.data().get(0).to_hex());
-    const assetB = new AssetClassDecoder().decode(pair.data().get(1).to_hex());
+    const assetA = new AssetClassDecoder().decode(mfs.manage(mfs.manage(pair.data()).get(0)).to_hex());
+    const assetB = new AssetClassDecoder().decode(mfs.manage(mfs.manage(pair.data()).get(1)).to_hex());
 
-    const directionAlternative = swapFields.get(0).as_constr_plutus_data()?.alternative().to_str();
-    if (!directionAlternative) throw new Error('Invalid direction. Expected plutus constr');
+    const directionAlternativeCpd = mfs.manage(mfs.manage(swapFields.get(0)).as_constr_plutus_data());
+    if (!directionAlternativeCpd) {
+      mfs.dispose();
+      throw new Error('Expected plutus contr');
+    }
+    const directionAlternative = mfs.manage(directionAlternativeCpd.alternative()).to_str();
     const direction = directionAlternative === '0' ? IWingridersSwapDirection.ATOB : IWingridersSwapDirection.BTOA;
 
-    const minAmount = swapFields.get(1).as_integer()?.to_str();
+    const minAmount = mfs.manage(mfs.manage(swapFields.get(1)).as_integer())?.to_str();
     if (!minAmount) throw new Error('Expected big integer for amount field');
 
     return WingridersOrderDatumBuilder.new()

@@ -8,9 +8,9 @@ import { Builder, Decodable, IAssetClass, PlutusDataBytes } from './types';
 export class AssetClassDecoder implements Decodable<IAssetClass> {
   decode(cborHex: string): IAssetClass {
     const mfs = new ManagedFreeableScope();
-    const fields = PlutusData.from_bytes(fromHex(cborHex)).as_constr_plutus_data()?.data();
-
-    mfs.manage(fields);
+    const fields = mfs.manage(
+      mfs.manage(mfs.manage(PlutusData.from_bytes(fromHex(cborHex))).as_constr_plutus_data())?.data(),
+    );
 
     if (!fields || fields.len() !== 2) {
       const len = fields?.len() ?? 0;
@@ -18,10 +18,16 @@ export class AssetClassDecoder implements Decodable<IAssetClass> {
       throw new Error(`Expected exactly 2 fields for assetclass, received: ${len}`);
     }
 
-    const csBytes = fields.get(0).as_bytes();
-    if (!csBytes) throw new Error('Expected bytes type for currency symbol field.');
-    const tknBytes = fields.get(1).as_bytes();
-    if (!tknBytes) throw new Error('Expected bytes type for token name field.');
+    const csBytes = mfs.manage(fields.get(0)).as_bytes();
+    if (!csBytes) {
+      mfs.dispose();
+      throw new Error('Expected bytes type for currency symbol field.');
+    }
+    const tknBytes = mfs.manage(fields.get(1)).as_bytes();
+    if (!tknBytes) {
+      mfs.dispose();
+      throw new Error('Expected bytes type for token name field.');
+    }
 
     mfs.dispose();
     return AssetClassBuilder.new().currencySymbol(toHex(csBytes)).assetId(toHex(tknBytes)).build();
@@ -57,11 +63,16 @@ export class AssetClassBuilder implements Builder<IAssetClass> {
 
       encode(): PlutusDataBytes {
         const mfs = new ManagedFreeableScope();
-        const fields = PlutusList.new();
-        mfs.manage(fields);
-        fields.add(PlutusData.new_bytes(fromHex(this.currencySymbol)));
-        fields.add(PlutusData.new_bytes(fromHex(this.assetId)));
-        const result = toHex(PlutusData.new_constr_plutus_data(ConstrPlutusData.new(BigNum.zero(), fields)).to_bytes());
+        const fields = mfs.manage(PlutusList.new());
+        fields.add(mfs.manage(PlutusData.new_bytes(fromHex(this.currencySymbol))));
+        fields.add(mfs.manage(PlutusData.new_bytes(fromHex(this.assetId))));
+        const result = toHex(
+          mfs
+            .manage(
+              PlutusData.new_constr_plutus_data(mfs.manage(ConstrPlutusData.new(mfs.manage(BigNum.zero()), fields))),
+            )
+            .to_bytes(),
+        );
         mfs.dispose();
         return result;
       },

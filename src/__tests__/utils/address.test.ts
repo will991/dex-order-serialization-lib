@@ -1,4 +1,3 @@
-import { Address } from '@emurgo/cardano-serialization-lib-nodejs';
 import { EncodableAddressBuilder as AddressBuilder, AddressDecoder } from '../../utils/encodable-address';
 
 describe('address module', () => {
@@ -35,7 +34,7 @@ describe('address module', () => {
   test('test builder by creating mainnet address with payment & staking credential', () => {
     const expected =
       'addr1q8qcwuw9ju33z2l0zayt38wsthsldyrgyt82p2p3trccucffejwnp8afwa8v58aw7dpj7hpf9dh8txr0qlksqtcsxheq50tx0z';
-    const actual = AddressBuilder.new().address(Address.from_bech32(expected)).build().bech32;
+    const actual = AddressBuilder.new().bech32Address(expected).build().bech32;
     expect(actual).toBe(expected);
   });
 
@@ -47,14 +46,28 @@ describe('address module', () => {
     const actual = AddressDecoder.new('Mainnet').decode(expectedEncoded);
     expect(actual).toBe(expectedAddr);
 
-    const actualEncoded = AddressBuilder.new().address(Address.from_bech32(expectedAddr)).build().encode();
+    const actualEncoded = AddressBuilder.new().bech32Address(expectedAddr).build().encode();
     expect(actualEncoded).toBe(expectedEncoded);
+  });
+
+  test('test encoding & decoding for memory leaks', () => {
+    const expectedAddr =
+      'addr1q8qcwuw9ju33z2l0zayt38wsthsldyrgyt82p2p3trccucffejwnp8afwa8v58aw7dpj7hpf9dh8txr0qlksqtcsxheq50tx0z';
+    const expectedEncoded =
+      'd8799fd8799f581cc18771c59723112bef1748b89dd05de1f6906822cea0a83158f18e61ffd8799fd8799fd8799f581c29cc9d309fa9774eca1faef3432f5c292b6e75986f07ed002f1035f2ffffffff';
+    for (let index = 0; index < 200_000; index++) {
+      const actual = AddressDecoder.new('Mainnet').decode(expectedEncoded);
+      expect(actual).toBe(expectedAddr);
+
+      const actualEncoded = AddressBuilder.new().bech32Address(expectedAddr).build().encode();
+      expect(actualEncoded).toBe(expectedEncoded);
+    }
   });
 
   test('test builder by creating testet address with payment & staking credential', () => {
     const expected =
       'addr_test1qrqcwuw9ju33z2l0zayt38wsthsldyrgyt82p2p3trccucffejwnp8afwa8v58aw7dpj7hpf9dh8txr0qlksqtcsxheqhekxra';
-    const actual = AddressBuilder.new().address(Address.from_bech32(expected)).build().bech32;
+    const actual = AddressBuilder.new().bech32Address(expected).build().bech32;
     expect(actual).toBe(expected);
   });
 });

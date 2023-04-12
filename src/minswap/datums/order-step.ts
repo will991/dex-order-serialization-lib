@@ -14,21 +14,19 @@ import { IMinswapOrderStep, IMinswapSwapExactIn, IMinswapSwapExactOut } from './
 export class MinswapOrderStepDecoder implements Decodable<IMinswapOrderStep> {
   decode(cborHex: string): IMinswapOrderStep {
     const mfs = new ManagedFreeableScope();
-    const pd = PlutusData.from_bytes(fromHex(cborHex));
-    mfs.manage(pd);
-    const cpd = pd.as_constr_plutus_data();
-    mfs.manage(cpd);
+    const pd = mfs.manage(PlutusData.from_bytes(fromHex(cborHex)));
+    const cpd = mfs.manage(pd.as_constr_plutus_data());
     if (!cpd) throw new Error('Invalid constructor plutus data for order step');
-    const fields = cpd.data();
-    mfs.manage(fields);
+    const fields = mfs.manage(cpd.data());
+
     if (fields.len() !== 2) {
       mfs.dispose();
       throw new Error(`Expected exactly 2 fields for order step, received: ${fields.len()}`);
     }
 
-    const ac = new AssetClassDecoder().decode(fields.get(0).to_hex());
-    const amt = fields.get(1).as_integer()?.to_str();
-    const alternative = cpd.alternative().to_str();
+    const ac = new AssetClassDecoder().decode(mfs.manage(fields.get(0)).to_hex());
+    const amt = mfs.manage(mfs.manage(fields.get(1)).as_integer())?.to_str();
+    const alternative = mfs.manage(cpd.alternative()).to_str();
     mfs.dispose();
     if (!amt) throw new Error('Expected amount field');
 
@@ -38,7 +36,7 @@ export class MinswapOrderStepDecoder implements Decodable<IMinswapOrderStep> {
       case '1':
         return MinswapSwapExactOutBuilder.new().desiredCoin(ac).expectedReceive(BigInt(amt)).build();
       default:
-        throw new Error(`Unexpected constructor index ${cpd.alternative().to_str()}`);
+        throw new Error(`Unexpected constructor index ${alternative}`);
     }
   }
 }
@@ -72,13 +70,18 @@ export class MinswapSwapExactInBuilder extends MinswapOrderStepBuilder<IMinswapS
 
       encode: () => {
         const mfs = new ManagedFreeableScope();
-        const fields = PlutusList.new();
+        const fields = mfs.manage(PlutusList.new());
 
-        mfs.manage(fields);
-        fields.add(toPlutusData(this.coin.encode()));
-        fields.add(PlutusData.new_integer(CSLBigInt.from_str(this.amount.toString())));
+        fields.add(mfs.manage(toPlutusData(this.coin.encode())));
+        fields.add(mfs.manage(PlutusData.new_integer(mfs.manage(CSLBigInt.from_str(this.amount.toString())))));
 
-        const result = toHex(PlutusData.new_constr_plutus_data(ConstrPlutusData.new(BigNum.zero(), fields)).to_bytes());
+        const result = toHex(
+          mfs
+            .manage(
+              PlutusData.new_constr_plutus_data(mfs.manage(ConstrPlutusData.new(mfs.manage(BigNum.zero()), fields))),
+            )
+            .to_bytes(),
+        );
         mfs.dispose();
         return result;
       },
@@ -107,12 +110,17 @@ export class MinswapSwapExactOutBuilder extends MinswapOrderStepBuilder<IMinswap
 
       encode: () => {
         const mfs = new ManagedFreeableScope();
-        const fields = PlutusList.new();
-        mfs.manage(fields);
+        const fields = mfs.manage(PlutusList.new());
 
-        fields.add(toPlutusData(this.coin.encode()));
-        fields.add(PlutusData.new_integer(CSLBigInt.from_str(`${this.amount}`)));
-        const result = toHex(PlutusData.new_constr_plutus_data(ConstrPlutusData.new(BigNum.one(), fields)).to_bytes());
+        fields.add(mfs.manage(toPlutusData(this.coin.encode())));
+        fields.add(mfs.manage(PlutusData.new_integer(mfs.manage(CSLBigInt.from_str(`${this.amount}`)))));
+        const result = toHex(
+          mfs
+            .manage(
+              PlutusData.new_constr_plutus_data(mfs.manage(ConstrPlutusData.new(mfs.manage(BigNum.one()), fields))),
+            )
+            .to_bytes(),
+        );
         mfs.dispose();
         return result;
       },

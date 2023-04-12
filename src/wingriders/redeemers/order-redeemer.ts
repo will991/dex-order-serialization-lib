@@ -1,10 +1,18 @@
 import { BigNum, PlutusData } from '@emurgo/cardano-serialization-lib-nodejs';
-import { Builder, Decodable, fromHex, toHex } from '../../utils';
+import { Builder, Decodable, ManagedFreeableScope, fromHex, toHex } from '../../utils';
 import { IWingridersReclaim } from './types';
 
 export class WingridersOrderRedeemerDecoder implements Decodable<IWingridersReclaim> {
   decode(cborHex: string): IWingridersReclaim {
-    switch (PlutusData.from_bytes(fromHex(cborHex)).as_constr_plutus_data()?.alternative().to_str() ?? '') {
+    const mfs = new ManagedFreeableScope();
+    const alternativeCpd = mfs.manage(PlutusData.from_bytes(fromHex(cborHex)).as_constr_plutus_data());
+    if (!alternativeCpd) {
+      mfs.dispose();
+      throw new Error('Expected plutus constr');
+    }
+    const alternative = mfs.manage(alternativeCpd.alternative()).to_str();
+    mfs.dispose();
+    switch (alternative) {
       case '1':
         return WingridersOrderRedeemerBuilder.new().build();
       default:
@@ -19,7 +27,10 @@ export class WingridersOrderRedeemerBuilder implements Builder<IWingridersReclai
   build(): IWingridersReclaim {
     return {
       encode: () => {
-        return toHex(PlutusData.new_empty_constr_plutus_data(BigNum.one()).to_bytes());
+        const mfs = new ManagedFreeableScope();
+        const result = toHex(mfs.manage(PlutusData.new_empty_constr_plutus_data(mfs.manage(BigNum.one()))).to_bytes());
+        mfs.dispose();
+        return result;
       },
     };
   }

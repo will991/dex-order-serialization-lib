@@ -24,27 +24,27 @@ export class MinswapOrderDatumDecoder implements Decodable<IMinswapOrderDatum> {
 
   decode(cborHex: string): IMinswapOrderDatum {
     const mfs = new ManagedFreeableScope();
-    const fields = PlutusData.from_bytes(fromHex(cborHex)).as_constr_plutus_data()?.data();
-    mfs.manage(fields);
+    const fields = mfs.manage(
+      mfs.manage(mfs.manage(PlutusData.from_bytes(fromHex(cborHex))).as_constr_plutus_data())?.data(),
+    );
     if (!fields || fields.len() !== 6) {
       const len = fields?.len() ?? 0;
       mfs.dispose();
       throw new Error(`Expected exactly 6 fields for order datum, received: ${len}`);
     }
-    const sender = new AddressDecoder(this.network).decode(fields.get(0).to_hex());
-    const receiver = new AddressDecoder(this.network).decode(fields.get(1).to_hex());
+    const sender = new AddressDecoder(this.network).decode(mfs.manage(fields.get(0)).to_hex());
+    const receiver = new AddressDecoder(this.network).decode(mfs.manage(fields.get(1)).to_hex());
 
-    const receiverDatumHashCpd = fields.get(2).as_constr_plutus_data();
-    mfs.manage(receiverDatumHashCpd);
+    const receiverDatumHashCpd = mfs.manage(mfs.manage(fields.get(2)).as_constr_plutus_data());
     if (!receiverDatumHashCpd) {
       mfs.dispose();
       throw new Error('Expected constructor plutus data for receiver datum hash');
     }
 
     let receiverDatumHash: string | undefined;
-    switch (receiverDatumHashCpd.alternative().to_str()) {
+    switch (mfs.manage(receiverDatumHashCpd.alternative()).to_str()) {
       case '0':
-        const datumBytes = receiverDatumHashCpd.data().get(0).as_bytes();
+        const datumBytes = mfs.manage(mfs.manage(receiverDatumHashCpd.data()).get(0)).as_bytes();
         if (!datumBytes) {
           mfs.dispose();
           throw new Error('No byte buffer found for receiver datum hash');
@@ -58,12 +58,12 @@ export class MinswapOrderDatumDecoder implements Decodable<IMinswapOrderDatum> {
     }
 
     const orderStep = new MinswapOrderStepDecoder().decode(fields.get(3).to_hex());
-    const batcherFee = fields.get(4).as_integer();
+    const batcherFee = mfs.manage(mfs.manage(fields.get(4)).as_integer());
     if (!batcherFee) {
       mfs.dispose();
       throw new Error('Expected integer for batcher fee.');
     }
-    const outputAda = fields.get(5).as_integer();
+    const outputAda = mfs.manage(mfs.manage(fields.get(5)).as_integer());
     if (!outputAda) {
       mfs.dispose();
       throw new Error('Expected integer for batcher output ADA.');
@@ -139,15 +139,32 @@ export class MinswapOrderDatumBuilder implements Builder<IMinswapOrderDatum> {
         const fields = PlutusList.new();
         mfs.manage(fields);
 
-        fields.add(toPlutusData(EncodableAddressBuilder.new().bech32Address(this._sender).build().encode()));
-        fields.add(toPlutusData(EncodableAddressBuilder.new().bech32Address(this._receiver).build().encode()));
-        if (this._receiverDatumHash) fields.add(PlutusData.from_hex(this._receiverDatumHash));
-        else fields.add(PlutusData.new_constr_plutus_data(ConstrPlutusData.new(BigNum.one(), PlutusList.new())));
-        fields.add(toPlutusData(this._orderStep.encode()));
-        fields.add(PlutusData.new_integer(CSLBigInt.from_str(this._batcherFee.toString())));
-        fields.add(PlutusData.new_integer(CSLBigInt.from_str(this._outputAda.toString())));
+        fields.add(
+          mfs.manage(toPlutusData(EncodableAddressBuilder.new().bech32Address(this._sender).build().encode())),
+        );
+        fields.add(
+          mfs.manage(toPlutusData(EncodableAddressBuilder.new().bech32Address(this._receiver).build().encode())),
+        );
+        if (this._receiverDatumHash) fields.add(mfs.manage(PlutusData.from_hex(this._receiverDatumHash)));
+        else
+          fields.add(
+            mfs.manage(
+              PlutusData.new_constr_plutus_data(
+                mfs.manage(ConstrPlutusData.new(mfs.manage(BigNum.one()), mfs.manage(PlutusList.new()))),
+              ),
+            ),
+          );
+        fields.add(mfs.manage(toPlutusData(this._orderStep.encode())));
+        fields.add(mfs.manage(PlutusData.new_integer(mfs.manage(CSLBigInt.from_str(this._batcherFee.toString())))));
+        fields.add(mfs.manage(PlutusData.new_integer(mfs.manage(CSLBigInt.from_str(this._outputAda.toString())))));
 
-        const result = toHex(PlutusData.new_constr_plutus_data(ConstrPlutusData.new(BigNum.zero(), fields)).to_bytes());
+        const result = toHex(
+          mfs
+            .manage(
+              PlutusData.new_constr_plutus_data(mfs.manage(ConstrPlutusData.new(mfs.manage(BigNum.zero()), fields))),
+            )
+            .to_bytes(),
+        );
         mfs.dispose();
         return result;
       },

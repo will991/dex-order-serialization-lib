@@ -70,21 +70,31 @@ export class SundaeswapOrderDestinationBuilder implements Builder<ISundaeswapOrd
 
       encode: () => {
         const mfs = new ManagedFreeableScope();
-        const fields = PlutusList.new();
-        mfs.manage(fields);
+        const fields = mfs.manage(PlutusList.new());
 
-        fields.add(toPlutusData(EncodableAddressBuilder.new().bech32Address(this._address).build().encode()));
+        fields.add(
+          mfs.manage(toPlutusData(EncodableAddressBuilder.new().bech32Address(this._address).build().encode())),
+        );
 
         if (this._datumHash) {
-          const f = PlutusList.new();
-          mfs.manage(f);
-          f.add(PlutusData.from_hex(this._datumHash));
-          fields.add(PlutusData.new_constr_plutus_data(ConstrPlutusData.new(BigNum.zero(), f)));
+          const f = mfs.manage(PlutusList.new());
+          f.add(mfs.manage(PlutusData.from_hex(this._datumHash)));
+          fields.add(
+            mfs.manage(
+              PlutusData.new_constr_plutus_data(mfs.manage(ConstrPlutusData.new(mfs.manage(BigNum.zero()), f))),
+            ),
+          );
         } else {
-          fields.add(PlutusData.new_empty_constr_plutus_data(BigNum.one()));
+          fields.add(mfs.manage(PlutusData.new_empty_constr_plutus_data(mfs.manage(BigNum.one()))));
         }
 
-        const result = toHex(PlutusData.new_constr_plutus_data(ConstrPlutusData.new(BigNum.zero(), fields)).to_bytes());
+        const result = toHex(
+          mfs
+            .manage(
+              PlutusData.new_constr_plutus_data(mfs.manage(ConstrPlutusData.new(mfs.manage(BigNum.zero()), fields))),
+            )
+            .to_bytes(),
+        );
         mfs.dispose();
         return result;
       },

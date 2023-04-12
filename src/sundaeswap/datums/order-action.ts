@@ -17,18 +17,27 @@ abstract class SundaeswapOrderActionBuilder<T extends Encodable> implements Buil
 
 export class SundaeswapOrderActionDecoder implements Decodable<ISundaeswapOrderAction> {
   decode(cborHex: string): ISundaeswapOrderAction {
-    const pd = PlutusData.from_bytes(fromHex(cborHex));
-    const cpd = pd.as_constr_plutus_data();
-    if (!cpd) throw new Error('Invalid constructor plutus data for order action');
+    const mfs = new ManagedFreeableScope();
+    const pd = mfs.manage(PlutusData.from_bytes(fromHex(cborHex)));
+    const cpd = mfs.manage(pd.as_constr_plutus_data());
+    if (!cpd) {
+      mfs.dispose();
+      throw new Error('Invalid constructor plutus data for order action');
+    }
 
-    const alternative = cpd.alternative().to_str();
+    const alternative = mfs.manage(cpd.alternative()).to_str();
     switch (alternative) {
       case '0':
-        return new OrderSwapDecoder().decode(pd.to_hex());
+        const cbor = pd.to_hex();
+        mfs.dispose();
+        return new OrderSwapDecoder().decode(cbor);
       case '1':
-        const withdrawAmount = cpd.data().get(0).as_integer();
-        if (!withdrawAmount) throw new Error('Expected withdraw amount as integer.');
-        return new EncodableBigInt(BigInt(withdrawAmount.to_str())) as ISundaeswapOrderWithdraw;
+        const withdrawAmount = mfs.manage(mfs.manage(mfs.manage(cpd.data()).get(0)).as_integer())?.to_str();
+        mfs.dispose();
+        if (!withdrawAmount) {
+          throw new Error('Expected withdraw amount as integer.');
+        }
+        return new EncodableBigInt(BigInt(withdrawAmount)) as ISundaeswapOrderWithdraw;
       case '2':
         throw new Error('Missing implementation');
       default:
@@ -39,34 +48,54 @@ export class SundaeswapOrderActionDecoder implements Decodable<ISundaeswapOrderA
 
 export class OrderSwapDecoder implements Decodable<ISundaeswapOrderAction> {
   decode(cborHex: string): ISundaeswapOrderAction {
-    const pd = PlutusData.from_bytes(fromHex(cborHex));
-    const cpd = pd.as_constr_plutus_data();
-    if (!cpd) throw new Error('Invalid constructor plutus data for order swap');
-    const fields = cpd.data();
-    if (fields.len() !== 3)
+    const mfs = new ManagedFreeableScope();
+    const pd = mfs.manage(PlutusData.from_bytes(fromHex(cborHex)));
+    const cpd = mfs.manage(pd.as_constr_plutus_data());
+    if (!cpd) {
+      mfs.dispose();
+      throw new Error('Invalid constructor plutus data for order swap');
+    }
+    const fields = mfs.manage(cpd.data());
+    if (fields.len() !== 3) {
+      mfs.dispose();
       throw new Error(`Expected exactly 3 fields for order swap datum, received: ${fields.len()}`);
+    }
 
-    const coinCpd = fields.get(0).as_constr_plutus_data();
-    if (!coinCpd) throw new Error('Invalid coin type. Expected constructor for plutus data');
+    const coinCpd = mfs.manage(mfs.manage(fields.get(0)).as_constr_plutus_data());
+    if (!coinCpd) {
+      mfs.dispose();
+      throw new Error('Invalid coin type. Expected constructor for plutus data');
+    }
 
-    const tradeAInToB = coinCpd.alternative().to_str() === '0' ? true : false;
-    const depositAmount = fields.get(1).as_integer();
-    if (!depositAmount) throw new Error('Expected integer type for deposit amount.');
-    const minimumReceivedAmountCpd = fields.get(2).as_constr_plutus_data();
-    if (!minimumReceivedAmountCpd)
+    const tradeAInToB = mfs.manage(coinCpd.alternative()).to_str() === '0' ? true : false;
+    const depositAmount = mfs.manage(mfs.manage(fields.get(1)).as_integer())?.to_str();
+    if (!depositAmount) {
+      mfs.dispose();
+      throw new Error('Expected integer type for deposit amount.');
+    }
+    const minimumReceivedAmountCpd = mfs.manage(mfs.manage(fields.get(2)).as_constr_plutus_data());
+    if (!minimumReceivedAmountCpd) {
+      mfs.dispose();
       throw new Error('Expected constructor plutus data type for minimum received amount.');
+    }
 
-    switch (minimumReceivedAmountCpd.alternative().to_str()) {
+    const alternative = mfs.manage(minimumReceivedAmountCpd.alternative()).to_str();
+
+    switch (alternative) {
       case '0':
-        const minimumAmount = minimumReceivedAmountCpd.data().get(0).as_integer();
+        const minimumAmount = mfs
+          .manage(mfs.manage(mfs.manage(minimumReceivedAmountCpd.data()).get(0)).as_integer())
+          ?.to_str();
+        mfs.dispose();
         if (!minimumAmount) throw new Error('Expected integer type for minimum received amount.');
         return SundaeswapOrderSwapBuilder.new()
           .coin(tradeAInToB)
-          .depositAmount(BigInt(depositAmount.to_str()))
-          .minimumReceivedAmount(BigInt(minimumAmount.to_str()))
+          .depositAmount(BigInt(depositAmount))
+          .minimumReceivedAmount(BigInt(minimumAmount))
           .build();
       case '1':
-        return SundaeswapOrderSwapBuilder.new().coin(tradeAInToB).depositAmount(BigInt(depositAmount.to_str())).build();
+        mfs.dispose();
+        return SundaeswapOrderSwapBuilder.new().coin(tradeAInToB).depositAmount(BigInt(depositAmount)).build();
       default:
         throw new Error(
           `Unknown constructor alternative for order swap ${minimumReceivedAmountCpd.alternative().to_str()}`,
@@ -107,24 +136,35 @@ export class SundaeswapOrderSwapBuilder extends SundaeswapOrderActionBuilder<ISu
 
       encode: () => {
         const mfs = new ManagedFreeableScope();
-        const fields = PlutusList.new();
-        mfs.manage(fields);
+        const fields = mfs.manage(PlutusList.new());
 
-        const coinAlternative = this._coin ? BigNum.zero() : BigNum.one();
-        mfs.manage(coinAlternative);
-        fields.add(PlutusData.new_empty_constr_plutus_data(coinAlternative));
-        fields.add(PlutusData.new_integer(CSLBigInt.from_str(this._amount.toString())));
+        const coinAlternative = mfs.manage(this._coin ? BigNum.zero() : BigNum.one());
+        fields.add(mfs.manage(PlutusData.new_empty_constr_plutus_data(coinAlternative)));
+        fields.add(mfs.manage(PlutusData.new_integer(mfs.manage(CSLBigInt.from_str(this._amount.toString())))));
 
         if (this._minimumReceivedAmount) {
-          const nestedFields = PlutusList.new();
-          mfs.manage(nestedFields);
-          nestedFields.add(PlutusData.new_integer(CSLBigInt.from_str(this._minimumReceivedAmount.toString())));
-          fields.add(PlutusData.new_constr_plutus_data(ConstrPlutusData.new(BigNum.zero(), nestedFields)));
+          const nestedFields = mfs.manage(PlutusList.new());
+          nestedFields.add(
+            mfs.manage(PlutusData.new_integer(mfs.manage(CSLBigInt.from_str(this._minimumReceivedAmount.toString())))),
+          );
+          fields.add(
+            mfs.manage(
+              PlutusData.new_constr_plutus_data(
+                mfs.manage(ConstrPlutusData.new(mfs.manage(BigNum.zero()), nestedFields)),
+              ),
+            ),
+          );
         } else {
-          fields.add(PlutusData.new_empty_constr_plutus_data(BigNum.one()));
+          fields.add(mfs.manage(PlutusData.new_empty_constr_plutus_data(mfs.manage(BigNum.one()))));
         }
 
-        const result = toHex(PlutusData.new_constr_plutus_data(ConstrPlutusData.new(BigNum.zero(), fields)).to_bytes());
+        const result = toHex(
+          mfs
+            .manage(
+              PlutusData.new_constr_plutus_data(mfs.manage(ConstrPlutusData.new(mfs.manage(BigNum.zero()), fields))),
+            )
+            .to_bytes(),
+        );
         mfs.dispose();
         return result;
       },
@@ -155,14 +195,18 @@ export class SundaeswapOrderDepositSingleBuilder extends SundaeswapOrderActionBu
 
       encode: () => {
         const mfs = new ManagedFreeableScope();
-        const fields = PlutusList.new();
-        mfs.manage(fields);
-        const coinAlternative = this._coin ? BigNum.zero() : BigNum.one();
-        mfs.manage(coinAlternative);
-        fields.add(PlutusData.new_empty_constr_plutus_data(coinAlternative));
-        fields.add(PlutusData.new_integer(CSLBigInt.from_str(this._amount.toString())));
+        const fields = mfs.manage(PlutusList.new());
+        const coinAlternative = mfs.manage(this._coin ? BigNum.zero() : BigNum.one());
+        fields.add(mfs.manage(PlutusData.new_empty_constr_plutus_data(coinAlternative)));
+        fields.add(mfs.manage(PlutusData.new_integer(mfs.manage(CSLBigInt.from_str(this._amount.toString())))));
 
-        const result = toHex(PlutusData.new_constr_plutus_data(ConstrPlutusData.new(BigNum.zero(), fields)).to_bytes());
+        const result = toHex(
+          mfs
+            .manage(
+              PlutusData.new_constr_plutus_data(mfs.manage(ConstrPlutusData.new(mfs.manage(BigNum.zero()), fields))),
+            )
+            .to_bytes(),
+        );
         mfs.dispose();
         return result;
       },

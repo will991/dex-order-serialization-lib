@@ -14,25 +14,26 @@ export class SundaeswapOrderAddressDecoder implements Decodable<ISundaeswapOrder
 
   decode(cborHex: string): ISundaeswapOrderAddress {
     const mfs = new ManagedFreeableScope();
-    const fields = PlutusData.from_bytes(fromHex(cborHex)).as_constr_plutus_data()?.data();
-    mfs.manage(fields);
+    const fields = mfs.manage(
+      mfs.manage(mfs.manage(PlutusData.from_bytes(fromHex(cborHex))).as_constr_plutus_data())?.data(),
+    );
     if (!fields || fields.len() !== 2) {
       const len = fields?.len() ?? 0;
       mfs.dispose();
       throw new Error(`Expected exactly 2 fields for order address datum, received: ${len}`);
     }
 
-    const destAddress = new SundaeswapOrderDestinationDecoder(this.network).decode(fields.get(0).to_hex());
-    const pkhConstr = fields.get(1).as_constr_plutus_data();
-    mfs.manage(pkhConstr);
+    const destAddress = new SundaeswapOrderDestinationDecoder(this.network).decode(mfs.manage(fields.get(0)).to_hex());
+    const pkhConstr = mfs.manage(mfs.manage(fields.get(1)).as_constr_plutus_data());
     if (!pkhConstr) {
       mfs.dispose();
       throw new Error('Invalid alternate pubkey hash type. Expected plutus data constructor');
     }
 
-    switch (pkhConstr.alternative().to_str()) {
+    const alternative = mfs.manage(pkhConstr.alternative()).to_str();
+    switch (alternative) {
       case '0':
-        const pkhHex = pkhConstr.data().get(0).to_hex();
+        const pkhHex = mfs.manage(mfs.manage(pkhConstr.data()).get(0)).to_hex();
         mfs.dispose();
         return SundaeswapOrderAddressBuilder.new().destination(destAddress).pkh(pkhHex).build();
       case '1':
@@ -40,7 +41,7 @@ export class SundaeswapOrderAddressDecoder implements Decodable<ISundaeswapOrder
         return SundaeswapOrderAddressBuilder.new().destination(destAddress).build();
       default:
         mfs.dispose();
-        throw new Error(`Unknown alternate pubkeyhash constructor alternative: ${pkhConstr.alternative().to_str()}`);
+        throw new Error(`Unknown alternate pubkeyhash constructor alternative: ${alternative}`);
     }
   }
 }
@@ -69,19 +70,27 @@ export class SundaeswapOrderAddressBuilder implements Builder<ISundaeswapOrderAd
 
       encode: () => {
         const mfs = new ManagedFreeableScope();
-        const fields = PlutusList.new();
-        mfs.manage(fields);
-        fields.add(toPlutusData(this._destination.encode()));
+        const fields = mfs.manage(PlutusList.new());
+        fields.add(mfs.manage(toPlutusData(this._destination.encode())));
         if (this._pkh) {
-          const f = PlutusList.new();
-          mfs.manage(f);
-          f.add(PlutusData.from_bytes(this._pkh));
-          fields.add(PlutusData.new_constr_plutus_data(ConstrPlutusData.new(BigNum.zero(), f)));
+          const f = mfs.manage(PlutusList.new());
+          f.add(mfs.manage(PlutusData.from_bytes(this._pkh)));
+          fields.add(
+            mfs.manage(
+              PlutusData.new_constr_plutus_data(mfs.manage(ConstrPlutusData.new(mfs.manage(BigNum.zero()), f))),
+            ),
+          );
         } else {
-          fields.add(PlutusData.new_empty_constr_plutus_data(BigNum.one()));
+          fields.add(mfs.manage(PlutusData.new_empty_constr_plutus_data(mfs.manage(BigNum.one()))));
         }
 
-        const result = toHex(PlutusData.new_constr_plutus_data(ConstrPlutusData.new(BigNum.zero(), fields)).to_bytes());
+        const result = toHex(
+          mfs
+            .manage(
+              PlutusData.new_constr_plutus_data(mfs.manage(ConstrPlutusData.new(mfs.manage(BigNum.zero()), fields))),
+            )
+            .to_bytes(),
+        );
         mfs.dispose();
         return result;
       },

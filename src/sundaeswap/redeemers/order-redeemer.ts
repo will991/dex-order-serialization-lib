@@ -5,14 +5,16 @@ import { IOrderRedeemer, ISundaeswapOrderRedeemerType } from './types';
 export class SundaeswapOrderRedeemerDecoder implements Decodable<IOrderRedeemer> {
   decode(cborHex: string): IOrderRedeemer {
     const mfs = new ManagedFreeableScope();
-    const pd = PlutusData.from_bytes(fromHex(cborHex));
-    mfs.manage(pd);
-
-    const alternative = pd.as_constr_plutus_data()?.alternative().to_str();
+    const pd = mfs.manage(PlutusData.from_bytes(fromHex(cborHex)));
+    const cpd = mfs.manage(pd.as_constr_plutus_data());
+    if (!cpd) {
+      mfs.dispose();
+      throw new Error('Expected plutus constr');
+    }
+    const alternative = mfs.manage(cpd.alternative()).to_str();
     const pdHex = pd.to_hex();
     mfs.dispose();
 
-    if (!alternative) throw new Error('Invalid constructor plutus data for order redeemer');
     switch (alternative) {
       case '0':
         return SundaeswapOrderRedeemerBuilder.new()
@@ -52,12 +54,20 @@ export class SundaeswapOrderRedeemerBuilder implements Builder<IOrderRedeemer> {
       encode: () => {
         if (this._scooper) return this._scooper.encode();
         const mfs = new ManagedFreeableScope();
-        const fields = PlutusList.new();
-        mfs.manage(fields);
+        const fields = mfs.manage(PlutusList.new());
         const result = toHex(
-          PlutusData.new_constr_plutus_data(
-            ConstrPlutusData.new(this._type === 'OrderScoop' ? BigNum.zero() : BigNum.one(), fields),
-          ).to_bytes(),
+          mfs
+            .manage(
+              PlutusData.new_constr_plutus_data(
+                mfs.manage(
+                  ConstrPlutusData.new(
+                    this._type === 'OrderScoop' ? mfs.manage(BigNum.zero()) : mfs.manage(BigNum.one()),
+                    fields,
+                  ),
+                ),
+              ),
+            )
+            .to_bytes(),
         );
         mfs.dispose();
         return result;

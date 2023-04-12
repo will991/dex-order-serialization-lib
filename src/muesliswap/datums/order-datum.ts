@@ -33,54 +33,60 @@ export class MuesliswapOrderDatumDecoder implements Decodable<IMuesliswapOrderDa
   decode(cborHex: string): IMuesliswapOrderDatum {
     const mfs = new ManagedFreeableScope();
 
-    const fields = PlutusData.from_bytes(fromHex(cborHex)).as_constr_plutus_data()?.data();
-    mfs.manage(fields);
+    const fields = mfs.manage(
+      mfs.manage(mfs.manage(PlutusData.from_bytes(fromHex(cborHex))).as_constr_plutus_data())?.data(),
+    );
 
     if (!fields || fields.len() !== 1) {
       const len = fields?.len() ?? 0;
       mfs.dispose();
       throw new Error(`Expected exactly 1 fields for order datum, received: ${len}`);
     }
-    const nestedFields = fields.get(0).as_constr_plutus_data()?.data();
+    const nestedFields = mfs.manage(mfs.manage(mfs.manage(fields.get(0)).as_constr_plutus_data())?.data());
     if (!nestedFields || nestedFields.len() !== 8) {
       const len = fields.len() ?? 0;
       mfs.dispose();
       throw new Error(`Expected exactly 8 fields for order datum, received: ${len}`);
     }
 
-    const sender = new AddressDecoder(this.network).decode(nestedFields.get(0).to_hex());
-    const buyCurrencySymbol = nestedFields.get(1).as_bytes();
+    const sender = new AddressDecoder(this.network).decode(mfs.manage(nestedFields.get(0)).to_hex());
+    const buyCurrencySymbol = mfs.manage(nestedFields.get(1)).as_bytes();
     if (!buyCurrencySymbol) {
       mfs.dispose();
       throw new Error('Expected buyCurrencySymbol field.');
     }
 
-    const buyAssetName = nestedFields.get(2).as_bytes();
+    const buyAssetName = mfs.manage(nestedFields.get(2)).as_bytes();
     if (!buyAssetName) {
       mfs.dispose();
       throw new Error('Expected buyAssetName field.');
     }
-    const sellCurrencySymbol = nestedFields.get(3).as_bytes();
+    const sellCurrencySymbol = mfs.manage(nestedFields.get(3)).as_bytes();
     if (!sellCurrencySymbol) {
       mfs.dispose();
       throw new Error('Expected sellCurrencySymbol field.');
     }
-    const sellAssetName = nestedFields.get(4).as_bytes();
+    const sellAssetName = mfs.manage(nestedFields.get(4)).as_bytes();
     if (!sellAssetName) {
       mfs.dispose();
       throw new Error('Expected sellAssetName field.');
     }
-    const buyAmount = nestedFields.get(5).as_integer()?.to_str();
+    const buyAmount = mfs.manage(mfs.manage(nestedFields.get(5)).as_integer())?.to_str();
     if (!buyAmount) {
       mfs.dispose();
       throw new Error('Expected buyAmount integer field.');
     }
-    const allowPartial = nestedFields.get(6).as_constr_plutus_data()?.alternative().to_str();
+    const allowPartialCpd = mfs.manage(mfs.manage(nestedFields.get(6)).as_constr_plutus_data());
+    if (!allowPartialCpd) {
+      mfs.dispose();
+      throw new Error('Expected plutus constr');
+    }
+    const allowPartial = mfs.manage(allowPartialCpd.alternative()).to_str();
     if (!allowPartial) {
       mfs.dispose();
       throw new Error('Expected allowPartial plutus constructor.');
     }
-    const fee = nestedFields.get(7).as_integer()?.to_str();
+    const fee = mfs.manage(mfs.manage(nestedFields.get(7)).as_integer())?.to_str();
     if (!fee) {
       mfs.dispose();
       throw new Error('Expected fe integer field.');
@@ -181,29 +187,37 @@ export class MuesliswapOrderDatumBuilder implements Builder<IMuesliswapOrderDatu
 
       encode(): PlutusDataBytes {
         const mfs = new ManagedFreeableScope();
-        const fields = PlutusList.new();
-        mfs.manage(fields);
+        const fields = mfs.manage(PlutusList.new());
 
-        fields.add(toPlutusData(this.creator.encode()));
-        fields.add(PlutusData.new_bytes(fromHex(this.buyCurrencySymbol)));
-        fields.add(PlutusData.new_bytes(fromHex(this.buyAssetName)));
-        fields.add(PlutusData.new_bytes(fromHex(this.sellCurrencySymbol)));
-        fields.add(PlutusData.new_bytes(fromHex(this.sellAssetName)));
-        fields.add(PlutusData.new_integer(CSLBigInt.from_str(this.buyAmount.toString())));
+        fields.add(mfs.manage(toPlutusData(this.creator.encode())));
+        fields.add(mfs.manage(PlutusData.new_bytes(fromHex(this.buyCurrencySymbol))));
+        fields.add(mfs.manage(PlutusData.new_bytes(fromHex(this.buyAssetName))));
+        fields.add(mfs.manage(PlutusData.new_bytes(fromHex(this.sellCurrencySymbol))));
+        fields.add(mfs.manage(PlutusData.new_bytes(fromHex(this.sellAssetName))));
+        fields.add(mfs.manage(PlutusData.new_integer(mfs.manage(CSLBigInt.from_str(this.buyAmount.toString())))));
 
         if (this.allowPartial) {
-          fields.add(PlutusData.new_empty_constr_plutus_data(BigNum.one()));
+          fields.add(mfs.manage(PlutusData.new_empty_constr_plutus_data(mfs.manage(BigNum.one()))));
         } else {
-          fields.add(PlutusData.new_empty_constr_plutus_data(BigNum.zero()));
+          fields.add(mfs.manage(PlutusData.new_empty_constr_plutus_data(mfs.manage(BigNum.zero()))));
         }
-        fields.add(PlutusData.new_integer(CSLBigInt.from_str(this.fee.toString())));
+        fields.add(mfs.manage(PlutusData.new_integer(mfs.manage(CSLBigInt.from_str(this.fee.toString())))));
 
-        const nestedFields = PlutusList.new();
-        mfs.manage(nestedFields);
-        nestedFields.add(PlutusData.new_constr_plutus_data(ConstrPlutusData.new(BigNum.zero(), fields)));
+        const nestedFields = mfs.manage(PlutusList.new());
+        nestedFields.add(
+          mfs.manage(
+            PlutusData.new_constr_plutus_data(mfs.manage(ConstrPlutusData.new(mfs.manage(BigNum.zero()), fields))),
+          ),
+        );
 
         const result = toHex(
-          PlutusData.new_constr_plutus_data(ConstrPlutusData.new(BigNum.zero(), nestedFields)).to_bytes(),
+          mfs
+            .manage(
+              PlutusData.new_constr_plutus_data(
+                mfs.manage(ConstrPlutusData.new(mfs.manage(BigNum.zero()), nestedFields)),
+              ),
+            )
+            .to_bytes(),
         );
         mfs.dispose();
         return result;
