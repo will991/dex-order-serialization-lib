@@ -30,7 +30,7 @@ export class AssetClassDecoder implements Decodable<IAssetClass> {
     }
 
     mfs.dispose();
-    return AssetClassBuilder.new().currencySymbol(toHex(csBytes)).assetId(toHex(tknBytes)).build();
+    return AssetClassBuilder.new().currencySymbol(toHex(csBytes)).assetName(toHex(tknBytes)).build();
   }
 }
 
@@ -39,7 +39,7 @@ export class AssetClassBuilder implements Builder<IAssetClass> {
   private _tkn!: Uint8Array;
 
   static new = () => new AssetClassBuilder();
-  static ada = () => AssetClassBuilder.new().currencySymbol(ADA_CURRENCY_SYMBOL).assetId(ADA_TOKEN_NAME).build();
+  static ada = () => AssetClassBuilder.new().currencySymbol(ADA_CURRENCY_SYMBOL).assetName(ADA_TOKEN_NAME).build();
 
   currencySymbol(csHex: string): AssetClassBuilder {
     const cs = fromHex(csHex);
@@ -49,8 +49,8 @@ export class AssetClassBuilder implements Builder<IAssetClass> {
     return this;
   }
 
-  assetId(tknHex: string): AssetClassBuilder {
-    this._tkn = fromHex(tknHex);
+  assetName(assetNameHex: string): AssetClassBuilder {
+    this._tkn = fromHex(assetNameHex);
     return this;
   }
 
@@ -59,13 +59,13 @@ export class AssetClassBuilder implements Builder<IAssetClass> {
 
     return {
       currencySymbol: toHex(this._cs),
-      assetId: toHex(this._tkn),
+      assetName: toHex(this._tkn),
 
       encode(): PlutusDataBytes {
         const mfs = new ManagedFreeableScope();
         const fields = mfs.manage(PlutusList.new());
         fields.add(mfs.manage(PlutusData.new_bytes(fromHex(this.currencySymbol))));
-        fields.add(mfs.manage(PlutusData.new_bytes(fromHex(this.assetId))));
+        fields.add(mfs.manage(PlutusData.new_bytes(fromHex(this.assetName))));
         const result = toHex(
           mfs
             .manage(

@@ -18,7 +18,7 @@ Example for creating an [`IAssetClass`](./src/utils/types.ts#L27-L32):
 ```
 const minswapAC: IAssetClass = AssetClassBuilder.new()
   .currencySymbol('29d222ce763455e3d7a09a665ce554f00ac89d2e99a1a83d267170c6')
-  .assetId('4d494e')
+  .assetName('4d494e')
   .build();
 
 const plutusData: PlutusData = minswapAC.encode();

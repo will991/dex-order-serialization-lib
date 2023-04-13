@@ -5,7 +5,7 @@ describe('order step module', () => {
   test('swap exact in builder', () => {
     const minswap = AssetClassBuilder.new()
       .currencySymbol('29d222ce763455e3d7a09a665ce554f00ac89d2e99a1a83d267170c6')
-      .assetId('4d494e')
+      .assetName('4d494e')
       .build();
     const sei = MinswapSwapExactInBuilder.new().desiredCoin(minswap).minimumReceive(BigInt(44506401)).build();
     expect(sei).toBeTruthy();
@@ -17,7 +17,7 @@ describe('order step module', () => {
   test('swap exact out builder', () => {
     const minswap = AssetClassBuilder.new()
       .currencySymbol('29d222ce763455e3d7a09a665ce554f00ac89d2e99a1a83d267170c6')
-      .assetId('4d494e')
+      .assetName('4d494e')
       .build();
     const sei = MinswapSwapExactOutBuilder.new().desiredCoin(minswap).expectedReceive(BigInt(44506401)).build();
     expect(sei).toBeTruthy();

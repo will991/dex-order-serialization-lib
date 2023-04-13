@@ -28,7 +28,7 @@ export interface IAssetClass extends Encodable {
   /** Base16 encoded currency symbol */
   readonly currencySymbol: string;
   /** Base16 encoded asset identifier */
-  readonly assetId: string;
+  readonly assetName: string;
 }
 
 /** Usually refers to an object that was returned by CSL. */

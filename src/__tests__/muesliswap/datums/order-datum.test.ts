@@ -14,17 +14,17 @@ describe('muesliswap order datum module', () => {
   test('encode order datum for muesliswap swap', () => {
     const minswap = AssetClassBuilder.new()
       .currencySymbol('29d222ce763455e3d7a09a665ce554f00ac89d2e99a1a83d267170c6')
-      .assetId('4d494e')
+      .assetName('4d494e')
       .build();
     const bech32Address =
       'addr1q8qcwuw9ju33z2l0zayt38wsthsldyrgyt82p2p3trccucffejwnp8afwa8v58aw7dpj7hpf9dh8txr0qlksqtcsxheq50tx0z';
     const order = MuesliswapOrderDatumBuilder.new()
       .creator(bech32Address)
       .buyCurrencySymbol(minswap.currencySymbol)
-      .buyAssetName(minswap.assetId)
+      .buyAssetName(minswap.assetName)
       .buyAmount(BigInt('52964147'))
       .sellCurrencySymbol(AssetClassBuilder.ada().currencySymbol)
-      .sellAssetName(AssetClassBuilder.ada().assetId)
+      .sellAssetName(AssetClassBuilder.ada().assetName)
       .allowPartial(true)
       .fee(BigInt('2650000'))
       .build();

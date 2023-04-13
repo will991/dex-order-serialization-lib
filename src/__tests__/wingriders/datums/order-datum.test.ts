@@ -15,7 +15,7 @@ describe('order datum module', () => {
     const mfs = new ManagedFreeableScope();
     const wingriders = AssetClassBuilder.new()
       .currencySymbol('c0ee29a85b13209423b10447d3c2e6a50641a15c57770e27cb9d5073')
-      .assetId('57696e67526964657273')
+      .assetName('57696e67526964657273')
       .build();
     const addr = mfs.manage(
       Address.from_bech32(
@@ -42,7 +42,7 @@ describe('order datum module', () => {
   test('decode mainnet order datum for wingriders swap', () => {
     const wingriders = AssetClassBuilder.new()
       .currencySymbol('c0ee29a85b13209423b10447d3c2e6a50641a15c57770e27cb9d5073')
-      .assetId('57696e67526964657273')
+      .assetName('57696e67526964657273')
       .build();
     const expected =
       'd8799fd8799fd8799fd8799f581cc18771c59723112bef1748b89dd05de1f6906822cea0a83158f18e61ffd8799fd8799fd8799f581c29cc9d309fa9774eca1faef3432f5c292b6e75986f07ed002f1035f2ffffffff581cc18771c59723112bef1748b89dd05de1f6906822cea0a83158f18e611b00000185127a008cd8799fd8799f4040ffd8799f581cc0ee29a85b13209423b10447d3c2e6a50641a15c57770e27cb9d50734a57696e67526964657273ffffffd8799fd879801a0061fa91ffff';
@@ -54,9 +54,9 @@ describe('order datum module', () => {
     expect(actual.direction).toBe(IWingridersSwapDirection.ATOB);
     expect(actual.deadline).toBe(BigInt(1671052263564));
     expect(actual.lpAssetA.currencySymbol).toBe(AssetClassBuilder.ada().currencySymbol);
-    expect(actual.lpAssetA.assetId).toBe(AssetClassBuilder.ada().assetId);
+    expect(actual.lpAssetA.assetName).toBe(AssetClassBuilder.ada().assetName);
     expect(actual.lpAssetB.currencySymbol).toBe(wingriders.currencySymbol);
-    expect(actual.lpAssetB.assetId).toBe(wingriders.assetId);
+    expect(actual.lpAssetB.assetName).toBe(wingriders.assetName);
     expect(actual.minAmount).toBe(BigInt(6421137));
     expect(actual.owner).toBe('c18771c59723112bef1748b89dd05de1f6906822cea0a83158f18e61');
 
