@@ -1,5 +1,5 @@
 {
-  "name": "dex-order-serialization-lib",
+  "name": "@will991/dex-order-serialization-lib",
   "version": "1.0.0",
   "description": "A library to (de)serialize cbor from different DEXes (decentralized exchanges) to specific types for order transaction construction.",
   "main": "lib/index.js",
