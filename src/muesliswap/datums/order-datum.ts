@@ -1,6 +1,6 @@
 import {
-  BigInt as CSLBigInt,
   BigNum,
+  BigInt as CSLBigInt,
   ConstrPlutusData,
   PlutusData,
   PlutusList,
@@ -11,9 +11,9 @@ import {
   Builder,
   Decodable,
   EncodableAddressBuilder,
-  fromHex,
   IAddress,
   Network,
+  fromHex,
   toHex,
 } from '../../utils';
 import { IMuesliswapOrderDatum } from './types';
@@ -62,7 +62,7 @@ export class MuesliswapOrderDatumDecoder implements Decodable<IMuesliswapOrderDa
       .buyAmount(BigInt(buyAmount.to_str()))
       .sellCurrencySymbol(toHex(sellCurrencySymbol))
       .sellAssetName(toHex(sellAssetName))
-      .allowPartial(allowPartial.is_zero() == false)
+      .allowPartial(allowPartial.is_zero() === false)
       .fee(BigInt(fee.to_str()))
       .build();
   }

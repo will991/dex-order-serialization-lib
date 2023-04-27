@@ -2,7 +2,7 @@ import { Encodable } from '../../utils';
 
 export type IWingridersRequestRedeemer = IWingridersApply | IWingridersReclaim;
 
-export interface IWingridersReclaim extends Encodable {}
+export type IWingridersReclaim = Encodable;
 export interface IWingridersApply extends Encodable {
   poolInputLocation: number;
 }
