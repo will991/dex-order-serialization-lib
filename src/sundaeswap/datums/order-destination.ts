@@ -1,5 +1,5 @@
-import { BigNum, ConstrPlutusData, PlutusData, PlutusList } from '@emurgo/cardano-serialization-lib-nodejs';
-import { AddressDecoder, Builder, Decodable, EncodableAddressBuilder, fromHex, Network } from '../../utils';
+import { BigNum, ConstrPlutusData, PlutusData, PlutusList } from '@emurgo/cardano-serialization-lib-browser';
+import { AddressDecoder, Builder, Decodable, EncodableAddressBuilder, Network, fromHex } from '../../utils';
 import { ISundaeswapOrderDestination } from './types';
 
 export class SundaeswapOrderDestinationDecoder implements Decodable<ISundaeswapOrderDestination> {

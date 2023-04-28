@@ -1,4 +1,4 @@
-import { BigNum, ConstrPlutusData, PlutusData, PlutusList } from '@emurgo/cardano-serialization-lib-nodejs';
+import { BigNum, ConstrPlutusData, PlutusData, PlutusList } from '@emurgo/cardano-serialization-lib-browser';
 import { Builder, Decodable, fromHex } from '../../utils';
 import { IMinswapOrderRedeemer, IMinswapOrderRedeemerType } from './types';
 

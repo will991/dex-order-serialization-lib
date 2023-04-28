@@ -1,5 +1,5 @@
-import { Address } from '@emurgo/cardano-serialization-lib-nodejs';
-import { AddressDecoder, EncodableAddressBuilder as AddressBuilder } from '../../utils/encodable-address';
+import { Address } from '@emurgo/cardano-serialization-lib-browser';
+import { EncodableAddressBuilder as AddressBuilder, AddressDecoder } from '../../utils/encodable-address';
 
 describe('address module', () => {
   test('encode & decode testnet address with payment credential', () => {

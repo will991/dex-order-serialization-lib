@@ -1,4 +1,4 @@
-import { Address, BaseAddress } from '@emurgo/cardano-serialization-lib-nodejs';
+import { Address, BaseAddress } from '@emurgo/cardano-serialization-lib-browser';
 import { AssetClassBuilder } from '../../../utils';
 import { WingridersOrderDatumBuilder, WingridersOrderDatumDecoder } from '../../../wingriders/datums/order-datum';
 import { IWingridersSwapDirection } from '../../../wingriders/datums/types';

@@ -1,11 +1,11 @@
 import {
-  BigInt as CSLBigInt,
   BigNum,
+  BigInt as CSLBigInt,
   ConstrPlutusData,
   PlutusData,
   PlutusList,
-} from '@emurgo/cardano-serialization-lib-nodejs';
-import { AssetClassDecoder, Builder, Decodable, fromHex, IAssetClass, Network, toHex } from '../../utils';
+} from '@emurgo/cardano-serialization-lib-browser';
+import { AssetClassDecoder, Builder, Decodable, IAssetClass, Network, fromHex, toHex } from '../../utils';
 import { AddressDecoder, EncodableAddressBuilder, IAddress } from '../../utils/encodable-address';
 import { IWingridersOrderDatum, IWingridersStakeCredential, IWingridersSwapDirection } from './types';
 

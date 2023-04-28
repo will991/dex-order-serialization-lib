@@ -1,4 +1,4 @@
-import { PlutusData } from '@emurgo/cardano-serialization-lib-nodejs';
+import { PlutusData } from '@emurgo/cardano-serialization-lib-browser';
 
 export type Network = 'Testnet' | 'Mainnet';
 
