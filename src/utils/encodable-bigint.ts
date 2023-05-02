@@ -1,4 +1,4 @@
-import { BigInt as CSLBigInt, PlutusData } from '@emurgo/cardano-serialization-lib-nodejs';
+import { BigInt as CSLBigInt, PlutusData } from '@emurgo/cardano-serialization-lib-browser';
 import { Encodable } from './types';
 
 export class EncodableBigInt implements Encodable {

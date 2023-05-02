@@ -1,5 +1,5 @@
-import { BigNum, ConstrPlutusData, PlutusData, PlutusList } from '@emurgo/cardano-serialization-lib-nodejs';
-import { AssetClassDecoder, Builder, Decodable, fromHex, IAssetClass } from '../../utils';
+import { BigNum, ConstrPlutusData, PlutusData, PlutusList } from '@emurgo/cardano-serialization-lib-browser';
+import { AssetClassDecoder, Builder, Decodable, IAssetClass, fromHex } from '../../utils';
 import { IOrderRedeemer, ISundaeswapOrderRedeemerType } from './types';
 
 export class SundaeswapOrderRedeemerDecoder implements Decodable<IOrderRedeemer> {

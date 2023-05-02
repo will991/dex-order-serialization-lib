@@ -1,12 +1,12 @@
 import {
   Address,
-  BigInt as CSLBigInt,
   BigNum,
+  BigInt as CSLBigInt,
   ConstrPlutusData,
   PlutusData,
   PlutusList,
-} from '@emurgo/cardano-serialization-lib-nodejs';
-import { Builder, Decodable, fromHex, Network, toHex } from '../../utils';
+} from '@emurgo/cardano-serialization-lib-browser';
+import { Builder, Decodable, Network, fromHex, toHex } from '../../utils';
 import { AddressDecoder, EncodableAddressBuilder } from '../../utils/encodable-address';
 import { MINSWAP_BATCHER_FEE_LOVELACE } from '../constant';
 import { MinswapOrderStepDecoder } from './order-step';
@@ -52,8 +52,8 @@ export class MinswapOrderDatumDecoder implements Decodable<IMinswapOrderDatum> {
     if (!outputAda) throw new Error('Expected integer for batcher output ADA.');
 
     return MinswapOrderDatumBuilder.new()
-      .sender(sender)
-      .receiver(receiver)
+      .sender(sender.to_bech32())
+      .receiver(receiver.to_bech32())
       .receiverDatumHash(receiverDatumHash)
       .orderStep(orderStep)
       .batcherFee(BigInt(batcherFee.to_str()))
@@ -72,13 +72,13 @@ export class MinswapOrderDatumBuilder implements Builder<IMinswapOrderDatum> {
 
   static new = () => new MinswapOrderDatumBuilder();
 
-  sender(address: Address): MinswapOrderDatumBuilder {
-    this._sender = address.to_bech32();
+  sender(bech32Address: string): MinswapOrderDatumBuilder {
+    this._sender = bech32Address;
     return this;
   }
 
-  receiver(address: Address): MinswapOrderDatumBuilder {
-    this._receiver = address.to_bech32();
+  receiver(bech32Address: string): MinswapOrderDatumBuilder {
+    this._receiver = bech32Address;
     return this;
   }
 

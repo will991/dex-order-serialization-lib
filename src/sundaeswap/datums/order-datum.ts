@@ -1,11 +1,11 @@
 import {
-  BigInt as CSLBigInt,
   BigNum,
+  BigInt as CSLBigInt,
   ConstrPlutusData,
   PlutusData,
   PlutusList,
-} from '@emurgo/cardano-serialization-lib-nodejs';
-import { Builder, Decodable, fromHex, Network, toHex } from '../../utils';
+} from '@emurgo/cardano-serialization-lib-browser';
+import { Builder, Decodable, Network, fromHex, toHex } from '../../utils';
 import { SUNDAESWAP_SCOOPER_FEE_LOVELACE } from '../constant';
 import { SundaeswapOrderActionDecoder } from './order-action';
 import { SundaeswapOrderAddressDecoder } from './order-address';

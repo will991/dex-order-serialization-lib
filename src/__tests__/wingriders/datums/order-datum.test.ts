@@ -1,4 +1,4 @@
-import { Address, BaseAddress } from '@emurgo/cardano-serialization-lib-nodejs';
+import { Address, BaseAddress } from '@emurgo/cardano-serialization-lib-browser';
 import { AssetClassBuilder } from '../../../utils';
 import { WingridersOrderDatumBuilder, WingridersOrderDatumDecoder } from '../../../wingriders/datums/order-datum';
 import { IWingridersSwapDirection } from '../../../wingriders/datums/types';
@@ -8,7 +8,9 @@ describe('order datum module', () => {
     try {
       WingridersOrderDatumBuilder.new().build();
       throw new Error('Expected field is missing value error');
-    } catch (e) {}
+    } catch (e) {
+      /** expected */
+    }
   });
 
   test('encode order datum for wingriders swap', () => {

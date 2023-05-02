@@ -1,4 +1,4 @@
-import { BigNum, PlutusData } from '@emurgo/cardano-serialization-lib-nodejs';
+import { BigNum, PlutusData } from '@emurgo/cardano-serialization-lib-browser';
 import { Builder, Decodable, fromHex } from '../../utils';
 import { IWingridersReclaim } from './types';
 

@@ -4,7 +4,7 @@ import {
   ConstrPlutusData,
   PlutusData,
   PlutusList,
-} from '@emurgo/cardano-serialization-lib-nodejs';
+} from '@emurgo/cardano-serialization-lib-browser';
 import { CURRENCY_SYMBOL_HASH_BYTE_BUFFER_LENGTH } from '../../constant';
 import {
   AddressDecoder,

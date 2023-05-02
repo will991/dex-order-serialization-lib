@@ -1,15 +1,16 @@
-import { Address } from '@emurgo/cardano-serialization-lib-nodejs';
 import { MinswapOrderDatumBuilder, MinswapOrderDatumDecoder } from '../../../minswap/datums/order-datum';
 import { MinswapSwapExactInBuilder } from '../../../minswap/datums/order-step';
 import { IMinswapSwapExactIn } from '../../../minswap/datums/types';
-import { adaToLovelace, AssetClassBuilder } from '../../../utils';
+import { AssetClassBuilder, adaToLovelace } from '../../../utils';
 
 describe('order datum module', () => {
   test('builder with incomplete data', () => {
     try {
       MinswapOrderDatumBuilder.new().build();
       throw new Error('Expected field is missing value error');
-    } catch (e) {}
+    } catch (e) {
+      /** expected */
+    }
   });
 
   test('encode order datum for swap exact in', () => {
@@ -17,9 +18,8 @@ describe('order datum module', () => {
       .currencySymbol('29d222ce763455e3d7a09a665ce554f00ac89d2e99a1a83d267170c6')
       .tokenName('4d494e')
       .build();
-    const addr = Address.from_bech32(
-      'addr1q8qcwuw9ju33z2l0zayt38wsthsldyrgyt82p2p3trccucffejwnp8afwa8v58aw7dpj7hpf9dh8txr0qlksqtcsxheq50tx0z',
-    );
+    const addr =
+      'addr1q8qcwuw9ju33z2l0zayt38wsthsldyrgyt82p2p3trccucffejwnp8afwa8v58aw7dpj7hpf9dh8txr0qlksqtcsxheq50tx0z';
     const sei = MinswapSwapExactInBuilder.new().desiredCoin(minswap).minimumReceive(BigInt(44506401)).build();
     const order = MinswapOrderDatumBuilder.new()
       .sender(addr)

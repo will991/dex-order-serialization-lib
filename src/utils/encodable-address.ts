@@ -6,7 +6,7 @@ import {
   EnterpriseAddress,
   PlutusData,
   PlutusList,
-} from '@emurgo/cardano-serialization-lib-nodejs';
+} from '@emurgo/cardano-serialization-lib-browser';
 import { fromHex, toHex } from './base16';
 import { Builder, Decodable, Encodable, Network } from './types';
 
