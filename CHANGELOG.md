@@ -1,3 +1,11 @@
+## [1.0.1](https://github.com/will991/dex-order-serialization-lib/compare/v1.0.0...v1.0.1) (2023-05-02)
+
+
+### Bug Fixes
+
+* format ([15421a6](https://github.com/will991/dex-order-serialization-lib/commit/15421a6d74b3a150fcd21a658918e32b6b3d44ea))
+* remove lock file ([c7ce33f](https://github.com/will991/dex-order-serialization-lib/commit/c7ce33f760a63bbb3885881480a8692124bbb012))
+
 # 1.0.0 (2023-04-27)
 
 
