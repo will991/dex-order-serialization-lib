@@ -1,5 +1,4 @@
 /** hex encoded cbor */
-
 export type PlutusDataBytes = string;
 export type Network = 'Testnet' | 'Mainnet';
 

@@ -8,7 +8,9 @@ describe('order datum module', () => {
     try {
       WingridersOrderDatumBuilder.new().build();
       throw new Error('Expected field is missing value error');
-    } catch (e) {}
+    } catch (e) {
+      /** expected */
+    }
   });
 
   test('encode order datum for wingriders swap', () => {

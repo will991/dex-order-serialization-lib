@@ -11,12 +11,12 @@ describe('assetclass builder module', () => {
   });
 
   test('test assetclass native asset builder', () => {
-    const minswap_cs = '29d222ce763455e3d7a09a665ce554f00ac89d2e99a1a83d267170c6';
-    const minswap_tkn = '4d494e';
-    const min = AssetClassBuilder.new().currencySymbol(minswap_cs).assetName(minswap_tkn).build();
+    const minswapCs = '29d222ce763455e3d7a09a665ce554f00ac89d2e99a1a83d267170c6';
+    const minswapTkn = '4d494e';
+    const min = AssetClassBuilder.new().currencySymbol(minswapCs).assetName(minswapTkn).build();
     expect(min).toBeTruthy();
-    expect(min.currencySymbol).toBe(minswap_cs);
-    expect(min.assetName).toBe(minswap_tkn);
+    expect(min.currencySymbol).toBe(minswapCs);
+    expect(min.assetName).toBe(minswapTkn);
   });
 
   test('test assetclass native asset builder with invalid currency symbol', () => {

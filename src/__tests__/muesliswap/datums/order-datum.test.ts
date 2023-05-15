@@ -7,7 +7,9 @@ describe('muesliswap order datum module', () => {
     try {
       MuesliswapOrderDatumBuilder.new().build();
       throw new Error('Expected field is missing value error');
-    } catch (e) {}
+    } catch (e) {
+      /** expected */
+    }
   });
 
   // https://cardanoscan.io/transaction/1dd87e1097fb609e404d6b62521790931957fb81695bc2b75a5ecf266da482d4?tab=utxo

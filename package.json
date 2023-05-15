@@ -1,9 +1,10 @@
 {
   "name": "@will991/dex-order-serialization-lib",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "A library to (de)serialize cbor from different DEXes (decentralized exchanges) to specific types for order transaction construction.",
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
+  "type": "module",
   "files": [
     "lib",
     "package.json",
@@ -42,6 +43,7 @@
     "@semantic-release/changelog": "^6.0.3",
     "@semantic-release/git": "^10.0.1",
     "@types/jest": "^29.4.0",
+    "jest": "^29.5.0",
     "prettier": "^2.8.4",
     "semantic-release": "^21.0.1",
     "ts-jest": "^29.0.5",
