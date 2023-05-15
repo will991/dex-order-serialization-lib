@@ -1,3 +1,18 @@
+## [1.0.2](https://github.com/will991/dex-order-serialization-lib/compare/v1.0.1...v1.0.2) (2023-05-15)
+
+
+### Bug Fixes
+
+* lock file ([6c61660](https://github.com/will991/dex-order-serialization-lib/commit/6c61660751909e07efa275d116ba34134e586112))
+* lock files ([35fb935](https://github.com/will991/dex-order-serialization-lib/commit/35fb9354a612fc4e16618c35fcca0aa8ca50fc12))
+* management of feeable CSL types ([ac0a11c](https://github.com/will991/dex-order-serialization-lib/commit/ac0a11c13fc120093254f96713fbed0a4356f4b3))
+* merge main & substitue csl for cml ([9391863](https://github.com/will991/dex-order-serialization-lib/commit/939186312f5471d91eec98c930ef4b2a9397b65d))
+* merged main ([3c85c83](https://github.com/will991/dex-order-serialization-lib/commit/3c85c83217d88411864da40621ac10ae3b0894bd))
+* Refactored assetId to assetName ([e2bfe05](https://github.com/will991/dex-order-serialization-lib/commit/e2bfe054b44a26d78b8228c8621fcfe6a533f4c1))
+* refactored naming of token name to assetId ([813e9e9](https://github.com/will991/dex-order-serialization-lib/commit/813e9e974ed9724eaa338354be062784772c303d))
+* refactoring freeing up CSL instances ([695e01e](https://github.com/will991/dex-order-serialization-lib/commit/695e01e7228ad59765f59dcb64d9d8a44be0d29e))
+* replace csl with cml including resolve merge conflicts ([d9656bd](https://github.com/will991/dex-order-serialization-lib/commit/d9656bd133a18995ae83b0dfaa13655733661ce9))
+
 ## [1.0.1](https://github.com/will991/dex-order-serialization-lib/compare/v1.0.0...v1.0.1) (2023-05-02)
 
 
