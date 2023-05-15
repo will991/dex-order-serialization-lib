@@ -1,14 +1,24 @@
-import { BigNum, ConstrPlutusData, PlutusData, PlutusList } from '@emurgo/cardano-serialization-lib-browser';
-import { Builder, Decodable, fromHex } from '../../utils';
+import { BigNum, ConstrPlutusData, PlutusData, PlutusList } from '@dcspark/cardano-multiplatform-lib-nodejs';
+import { Builder, Decodable, ManagedFreeableScope, fromHex, toHex } from '../../utils';
 import { IMinswapOrderRedeemer, IMinswapOrderRedeemerType } from './types';
 
 export class MinswapOrderRedeemerDecoder implements Decodable<IMinswapOrderRedeemer> {
   decode(cborHex: string): IMinswapOrderRedeemer {
-    const pd = PlutusData.from_bytes(fromHex(cborHex));
-    const cpd = pd.as_constr_plutus_data();
-    if (!cpd) throw new Error('Invalid constructor plutus data for order redeemer');
+    const mfs = new ManagedFreeableScope();
+    const pd = mfs.manage(PlutusData.from_bytes(fromHex(cborHex)));
+    const cpd = mfs.manage(pd.as_constr_plutus_data());
 
-    switch (cpd.alternative().to_str()) {
+    if (!cpd) {
+      mfs.dispose();
+      throw new Error('Expected plutus constr for minswap order redeemer');
+    }
+    const alternative = mfs.manage(cpd.alternative()).to_str();
+    mfs.dispose();
+    if (!alternative) {
+      throw new Error('Invalid constructor plutus data for order redeemer');
+    }
+
+    switch (alternative) {
       case '0':
         return MinswapOrderRedeemerBuilder.new().type('ApplyOrder').build();
       case '1':
@@ -34,8 +44,24 @@ export class MinswapOrderRedeemerBuilder implements Builder<IMinswapOrderRedeeme
     return {
       type: this._type,
       encode: () => {
-        const alternative: BigNum = this._type === 'ApplyOrder' ? BigNum.zero() : BigNum.one();
-        return PlutusData.new_constr_plutus_data(ConstrPlutusData.new(alternative, PlutusList.new()));
+        const mfs = new ManagedFreeableScope();
+        const result = toHex(
+          mfs
+            .manage(
+              PlutusData.new_constr_plutus_data(
+                mfs.manage(
+                  ConstrPlutusData.new(
+                    this._type === 'ApplyOrder' ? mfs.manage(BigNum.zero()) : mfs.manage(BigNum.from_str('1')),
+                    mfs.manage(PlutusList.new()),
+                  ),
+                ),
+              ),
+            )
+            .to_bytes(),
+        );
+
+        mfs.dispose();
+        return result;
       },
     };
   }

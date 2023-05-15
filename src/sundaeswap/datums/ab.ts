@@ -1,5 +1,5 @@
-import { BigNum, ConstrPlutusData, PlutusData, PlutusList } from '@emurgo/cardano-serialization-lib-browser';
-import { Builder, Encodable } from '../../utils';
+import { BigNum, ConstrPlutusData, PlutusData, PlutusList } from '@dcspark/cardano-multiplatform-lib-nodejs';
+import { Builder, Encodable, ManagedFreeableScope, toHex, toPlutusData } from '../../utils';
 import { IAB } from './types';
 
 export class ABBuilder<T extends Encodable> implements Builder<IAB<T>> {
@@ -25,10 +25,20 @@ export class ABBuilder<T extends Encodable> implements Builder<IAB<T>> {
       b: this._b,
 
       encode: () => {
-        const fields = PlutusList.new();
-        fields.add(this._a.encode());
-        fields.add(this._b.encode());
-        return PlutusData.new_constr_plutus_data(ConstrPlutusData.new(BigNum.zero(), fields));
+        const mfs = new ManagedFreeableScope();
+        const fields = mfs.manage(PlutusList.new());
+        fields.add(mfs.manage(toPlutusData(this._a.encode())));
+        fields.add(mfs.manage(toPlutusData(this._b.encode())));
+        const result = toHex(
+          mfs
+            .manage(
+              PlutusData.new_constr_plutus_data(mfs.manage(ConstrPlutusData.new(mfs.manage(BigNum.zero()), fields))),
+            )
+            .to_bytes(),
+        );
+
+        mfs.dispose();
+        return result;
       },
     };
   }

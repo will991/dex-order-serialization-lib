@@ -5,6 +5,6 @@ describe('wingriders order redeemer module', () => {
     const expected = 'd87a80';
     const actual = new WingridersOrderRedeemerDecoder().decode(expected);
     expect(actual).toBeTruthy();
-    expect(actual.encode().to_hex()).toBe(expected);
+    expect(actual.encode()).toBe(expected);
   });
 });

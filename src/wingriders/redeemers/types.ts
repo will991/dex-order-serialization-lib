@@ -1,4 +1,4 @@
-import { Encodable } from '../../utils';
+import { Encodable } from '../../utils/types';
 
 export type IWingridersRequestRedeemer = IWingridersApply | IWingridersReclaim;
 

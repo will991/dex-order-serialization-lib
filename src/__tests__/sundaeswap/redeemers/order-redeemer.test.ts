@@ -7,7 +7,7 @@ describe('order redeemer module', () => {
     const actual = new SundaeswapOrderRedeemerDecoder().decode(expected);
     expect(actual).toBeTruthy();
     expect(actual.type).toBe('OrderScoop');
-    expect(actual.encode().to_hex()).toBe(expected);
+    expect(actual.encode()).toBe(expected);
   });
 
   // Reference transaction: https://cardanoscan.io/transaction/d4bf6dc892f71eb0c6dfea7898a7cbe3c9dd456729c078766261017efb57f638
@@ -16,6 +16,6 @@ describe('order redeemer module', () => {
     const actual = new SundaeswapOrderRedeemerDecoder().decode(expected);
     expect(actual).toBeTruthy();
     expect(actual.type).toBe('OrderCancel');
-    expect(actual.encode().to_hex()).toBe(expected);
+    expect(actual.encode()).toBe(expected);
   });
 });

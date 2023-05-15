@@ -4,8 +4,8 @@ import {
   ConstrPlutusData,
   PlutusData,
   PlutusList,
-} from '@emurgo/cardano-serialization-lib-browser';
-import { Builder, Decodable, Network, fromHex, toHex } from '../../utils';
+} from '@dcspark/cardano-multiplatform-lib-nodejs';
+import { Builder, Decodable, ManagedFreeableScope, Network, fromHex, toHex, toPlutusData } from '../../utils';
 import { SUNDAESWAP_SCOOPER_FEE_LOVELACE } from '../constant';
 import { SundaeswapOrderActionDecoder } from './order-action';
 import { SundaeswapOrderAddressDecoder } from './order-address';
@@ -21,22 +21,33 @@ export class SundaeswapOrderDatumDecoder implements Decodable<ISundaeswapOrderDa
   static new = (network: Network) => new SundaeswapOrderDatumDecoder(network);
 
   decode(cborHex: string): ISundaeswapOrderDatum {
-    const pd = PlutusData.from_bytes(fromHex(cborHex));
-    const cpd = pd.as_constr_plutus_data();
-    if (!cpd) throw new Error('Invalid constructor plutus data for order datum');
-    const fields = cpd.data();
-    if (fields.len() !== 4) throw new Error(`Expected exactly 4 fields for order datum, received: ${fields.len()}`);
-    const poolIdBytes = fields.get(0).as_bytes();
-    if (!poolIdBytes) throw new Error('No byte buffer found for pool identifier');
-    const orderAddress = new SundaeswapOrderAddressDecoder(this.network).decode(fields.get(1).to_hex());
-    const scooperFee = fields.get(2).as_integer();
-    if (!scooperFee) throw new Error('No byte buffer found for scooper fee');
-    const action = new SundaeswapOrderActionDecoder().decode(fields.get(3).to_hex());
+    const mfs = new ManagedFreeableScope();
+    const fields = mfs.manage(
+      mfs.manage(mfs.manage(PlutusData.from_bytes(fromHex(cborHex))).as_constr_plutus_data())?.data(),
+    );
+    if (!fields || fields.len() !== 4) {
+      const len = fields?.len() ?? 0;
+      mfs.dispose();
+      throw new Error(`Expected exactly 4 fields for order datum, received: ${len}`);
+    }
+    const poolIdBytes = mfs.manage(fields.get(0)).as_bytes();
+    if (!poolIdBytes) {
+      mfs.dispose();
+      throw new Error('No byte buffer found for pool identifier');
+    }
+    const addr = toHex(mfs.manage(fields.get(1)).to_bytes());
+    const orderAddress = new SundaeswapOrderAddressDecoder(this.network).decode(addr);
+    const scooperFee = mfs.manage(mfs.manage(fields.get(2)).as_integer())?.to_str();
+    if (!scooperFee) {
+      mfs.dispose();
+      throw new Error('No byte buffer found for scooper fee');
+    }
+    const action = new SundaeswapOrderActionDecoder().decode(toHex(mfs.manage(fields.get(3)).to_bytes()));
 
     return SundaeswapOrderDatumBuilder.new()
       .poolIdentifier(toHex(poolIdBytes))
       .orderAddress(orderAddress)
-      .scooperFee(BigInt(scooperFee.to_str()))
+      .scooperFee(BigInt(scooperFee))
       .action(action)
       .build();
   }
@@ -84,13 +95,23 @@ export class SundaeswapOrderDatumBuilder implements Builder<ISundaeswapOrderDatu
       action: this._action,
 
       encode: () => {
-        const fields = PlutusList.new();
-        fields.add(PlutusData.new_bytes(fromHex(this._poolIdentifier)));
-        fields.add(this._orderAddress.encode());
-        fields.add(PlutusData.new_integer(CSLBigInt.from_str(this._scooperFee.toString())));
-        fields.add(this._action.encode());
+        const mfs = new ManagedFreeableScope();
+        const fields = mfs.manage(PlutusList.new());
 
-        return PlutusData.new_constr_plutus_data(ConstrPlutusData.new(BigNum.zero(), fields));
+        fields.add(mfs.manage(PlutusData.new_bytes(fromHex(this._poolIdentifier))));
+        fields.add(mfs.manage(toPlutusData(this._orderAddress.encode())));
+        fields.add(mfs.manage(PlutusData.new_integer(mfs.manage(CSLBigInt.from_str(this._scooperFee.toString())))));
+        fields.add(mfs.manage(toPlutusData(this._action.encode())));
+
+        const result = toHex(
+          mfs
+            .manage(
+              PlutusData.new_constr_plutus_data(mfs.manage(ConstrPlutusData.new(mfs.manage(BigNum.zero()), fields))),
+            )
+            .to_bytes(),
+        );
+        mfs.dispose();
+        return result;
       },
     };
   }

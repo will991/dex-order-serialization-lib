@@ -22,7 +22,7 @@ describe('order datum module', () => {
     expect((actual.action as ISundaeswapSwapAction).coin).toBe(true);
     expect((actual.action as ISundaeswapSwapAction).depositAmount).toBe(adaToLovelace(2));
     expect((actual.action as ISundaeswapSwapAction).minimumReceivedAmount).toBe(BigInt(42389092));
-    expect(actual.encode().to_hex()).toBe(expected);
+    expect(actual.encode()).toBe(expected);
   });
 
   // reference tx:    https://cardanoscan.io/transaction/f6c14d27aed081f7f969694ae05253a82d70209c7c2ce75fa4bbf4f38382386a?tab=utxo
@@ -43,6 +43,6 @@ describe('order datum module', () => {
     expect((actual.action as ISundaeswapSwapAction).coin).toBe(false);
     expect((actual.action as ISundaeswapSwapAction).depositAmount).toBe(BigInt(20149598));
     expect((actual.action as ISundaeswapSwapAction).minimumReceivedAmount).toBe(BigInt(1017260));
-    expect(actual.encode().to_hex()).toBe(expected);
+    expect(actual.encode()).toBe(expected);
   });
 });

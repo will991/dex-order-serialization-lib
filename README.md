@@ -23,7 +23,7 @@ const minswapAC: IAssetClass = AssetClassBuilder.new()
 
 const plutusData: PlutusData = minswapAC.encode();
 const cborBytes: UInt8Array = plutusData.to_bytes();
-const cborHex: string = plutusData.to_hex();
+const cborHex: string = toHex(plutusData.to_bytes());
 ```
 
 ### Decoder type

@@ -4,30 +4,37 @@ import {
   ConstrPlutusData,
   PlutusData,
   PlutusList,
-} from '@emurgo/cardano-serialization-lib-browser';
-import { AssetClassDecoder, fromHex } from '../../utils';
+} from '@dcspark/cardano-multiplatform-lib-nodejs';
+import { AssetClassDecoder, ManagedFreeableScope, fromHex, toHex, toPlutusData } from '../../utils';
 import { Builder, Decodable, Encodable, IAssetClass } from '../../utils/types';
 import { IMinswapOrderStep, IMinswapSwapExactIn, IMinswapSwapExactOut } from './types';
 
 export class MinswapOrderStepDecoder implements Decodable<IMinswapOrderStep> {
   decode(cborHex: string): IMinswapOrderStep {
-    const pd = PlutusData.from_bytes(fromHex(cborHex));
-    const cpd = pd.as_constr_plutus_data();
+    const mfs = new ManagedFreeableScope();
+    const pd = mfs.manage(PlutusData.from_bytes(fromHex(cborHex)));
+    const cpd = mfs.manage(pd.as_constr_plutus_data());
     if (!cpd) throw new Error('Invalid constructor plutus data for order step');
-    const fields = cpd.data();
-    if (fields.len() !== 2) throw new Error(`Expected exactly 2 fields for order step, received: ${fields.len()}`);
+    const fields = mfs.manage(cpd.data());
 
-    const ac = new AssetClassDecoder().decode(fields.get(0).to_hex());
-    const amt = fields.get(1).as_integer();
+    if (fields.len() !== 2) {
+      mfs.dispose();
+      throw new Error(`Expected exactly 2 fields for order step, received: ${fields.len()}`);
+    }
+
+    const ac = new AssetClassDecoder().decode(toHex(mfs.manage(fields.get(0)).to_bytes()));
+    const amt = mfs.manage(mfs.manage(fields.get(1)).as_integer())?.to_str();
+    const alternative = mfs.manage(cpd.alternative()).to_str();
+    mfs.dispose();
     if (!amt) throw new Error('Expected amount field');
 
-    switch (cpd.alternative().to_str()) {
+    switch (alternative) {
       case '0':
-        return MinswapSwapExactInBuilder.new().desiredCoin(ac).minimumReceive(BigInt(amt.to_str())).build();
+        return MinswapSwapExactInBuilder.new().desiredCoin(ac).minimumReceive(BigInt(amt)).build();
       case '1':
-        return MinswapSwapExactOutBuilder.new().desiredCoin(ac).expectedReceive(BigInt(amt.to_str())).build();
+        return MinswapSwapExactOutBuilder.new().desiredCoin(ac).expectedReceive(BigInt(amt)).build();
       default:
-        throw new Error(`Unexpected constructor index ${cpd.alternative().to_str()}`);
+        throw new Error(`Unexpected constructor index ${alternative}`);
     }
   }
 }
@@ -60,10 +67,21 @@ export class MinswapSwapExactInBuilder extends MinswapOrderStepBuilder<IMinswapS
       minimumReceive: this.amount,
 
       encode: () => {
-        const fields = PlutusList.new();
-        fields.add(this.coin.encode());
-        fields.add(PlutusData.new_integer(CSLBigInt.from_str(this.amount.toString())));
-        return PlutusData.new_constr_plutus_data(ConstrPlutusData.new(BigNum.zero(), fields));
+        const mfs = new ManagedFreeableScope();
+        const fields = mfs.manage(PlutusList.new());
+
+        fields.add(mfs.manage(toPlutusData(this.coin.encode())));
+        fields.add(mfs.manage(PlutusData.new_integer(mfs.manage(CSLBigInt.from_str(this.amount.toString())))));
+
+        const result = toHex(
+          mfs
+            .manage(
+              PlutusData.new_constr_plutus_data(mfs.manage(ConstrPlutusData.new(mfs.manage(BigNum.zero()), fields))),
+            )
+            .to_bytes(),
+        );
+        mfs.dispose();
+        return result;
       },
     };
   }
@@ -89,10 +107,22 @@ export class MinswapSwapExactOutBuilder extends MinswapOrderStepBuilder<IMinswap
       expectedReceive: this.amount,
 
       encode: () => {
-        const fields = PlutusList.new();
-        fields.add(this.coin.encode());
-        fields.add(PlutusData.new_integer(CSLBigInt.from_str(`${this.amount}`)));
-        return PlutusData.new_constr_plutus_data(ConstrPlutusData.new(BigNum.one(), fields));
+        const mfs = new ManagedFreeableScope();
+        const fields = mfs.manage(PlutusList.new());
+
+        fields.add(mfs.manage(toPlutusData(this.coin.encode())));
+        fields.add(mfs.manage(PlutusData.new_integer(mfs.manage(CSLBigInt.from_str(`${this.amount}`)))));
+        const result = toHex(
+          mfs
+            .manage(
+              PlutusData.new_constr_plutus_data(
+                mfs.manage(ConstrPlutusData.new(mfs.manage(BigNum.from_str('1')), fields)),
+              ),
+            )
+            .to_bytes(),
+        );
+        mfs.dispose();
+        return result;
       },
     };
   }

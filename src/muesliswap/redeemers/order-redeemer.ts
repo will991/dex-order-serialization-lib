@@ -1,14 +1,19 @@
-import { BigNum, PlutusData } from '@emurgo/cardano-serialization-lib-browser';
-import { Builder, Decodable, fromHex } from '../../utils';
+import { BigNum, ConstrPlutusData, PlutusData, PlutusList } from '@dcspark/cardano-multiplatform-lib-nodejs';
+import { Builder, Decodable, ManagedFreeableScope, fromHex, toHex } from '../../utils';
 import { IMuesliswapOrderRedeemer, IMuesliswapOrderRedeemerType } from './types';
 
 export class MuesliswapOrderRedeemerDecoder implements Decodable<IMuesliswapOrderRedeemer> {
   decode(cborHex: string): IMuesliswapOrderRedeemer {
-    const pd = PlutusData.from_bytes(fromHex(cborHex));
-    const cpd = pd.as_constr_plutus_data();
-    if (!cpd) throw new Error('Invalid constructor plutus data for order redeemer');
+    const mfs = new ManagedFreeableScope();
+    const cpd = mfs.manage(mfs.manage(PlutusData.from_bytes(fromHex(cborHex))).as_constr_plutus_data());
+    if (!cpd) {
+      mfs.dispose();
+      throw new Error('Expected plutus constr for muesliswap order redeemer');
+    }
 
-    switch (cpd.alternative().to_str()) {
+    const alternative = mfs.manage(cpd.alternative()).to_str();
+    mfs.dispose();
+    switch (alternative) {
       case '0':
         return MuesliswapOrderRedeemerBuilder.new().type('Cancel').build();
       default:
@@ -32,7 +37,18 @@ export class MuesliswapOrderRedeemerBuilder implements Builder<IMuesliswapOrderR
       type: this._type,
 
       encode: () => {
-        return PlutusData.new_empty_constr_plutus_data(BigNum.zero());
+        const mfs = new ManagedFreeableScope();
+        const result = toHex(
+          mfs
+            .manage(
+              PlutusData.new_constr_plutus_data(
+                mfs.manage(ConstrPlutusData.new(mfs.manage(BigNum.zero()), mfs.manage(PlutusList.new()))),
+              ),
+            )
+            .to_bytes(),
+        );
+        mfs.dispose();
+        return result;
       },
     };
   }

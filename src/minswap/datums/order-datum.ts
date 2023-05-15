@@ -1,13 +1,14 @@
 import {
-  Address,
   BigNum,
   BigInt as CSLBigInt,
   ConstrPlutusData,
   PlutusData,
   PlutusList,
-} from '@emurgo/cardano-serialization-lib-browser';
+} from '@dcspark/cardano-multiplatform-lib-nodejs';
 import { Builder, Decodable, Network, fromHex, toHex } from '../../utils';
-import { AddressDecoder, EncodableAddressBuilder } from '../../utils/encodable-address';
+import { AddressDecoder, Bech32Address, EncodableAddressBuilder } from '../../utils/encodable-address';
+import { ManagedFreeableScope } from '../../utils/freeable';
+import { toPlutusData } from '../../utils/plutusdata';
 import { MINSWAP_BATCHER_FEE_LOVELACE } from '../constant';
 import { MinswapOrderStepDecoder } from './order-step';
 import { IMinswapOrderDatum, IMinswapOrderStep } from './types';
@@ -22,38 +23,49 @@ export class MinswapOrderDatumDecoder implements Decodable<IMinswapOrderDatum> {
   static new = (network: Network) => new MinswapOrderDatumDecoder(network);
 
   decode(cborHex: string): IMinswapOrderDatum {
-    const pd = PlutusData.from_bytes(fromHex(cborHex));
-    const cpd = pd.as_constr_plutus_data();
-    if (!cpd) throw new Error('Invalid constructor plutus data for order datum');
-    const fields = cpd.data();
-    if (fields.len() !== 6) throw new Error(`Expected exactly 6 fields for order datum, received: ${fields.len()}`);
-    const sender = new AddressDecoder(this.network).decode(fields.get(0).to_hex());
-    const receiver = new AddressDecoder(this.network).decode(fields.get(1).to_hex());
+    const mfs = new ManagedFreeableScope();
+    const fields = mfs.manage(
+      mfs.manage(mfs.manage(PlutusData.from_bytes(fromHex(cborHex))).as_constr_plutus_data())?.data(),
+    );
+    if (!fields || fields.len() !== 6) {
+      const len = fields?.len() ?? 0;
+      mfs.dispose();
+      throw new Error(`Expected exactly 6 fields for order datum, received: ${len}`);
+    }
+    const sender = new AddressDecoder(this.network).decode(toHex(mfs.manage(fields.get(0)).to_bytes()));
+    const receiver = new AddressDecoder(this.network).decode(toHex(mfs.manage(fields.get(1)).to_bytes()));
 
-    const receiverDatumHashCpd = fields.get(2).as_constr_plutus_data();
-    if (!receiverDatumHashCpd) throw new Error('Expected constructor plutus data for receiver datum hash');
+    const receiverDatumHashCpd = mfs.manage(mfs.manage(fields.get(2)).as_constr_plutus_data());
+    if (!receiverDatumHashCpd) {
+      mfs.dispose();
+      throw new Error('Expected constructor plutus data for receiver datum hash');
+    }
 
     let receiverDatumHash: string | undefined;
-    switch (receiverDatumHashCpd.alternative().to_str()) {
+    switch (mfs.manage(receiverDatumHashCpd.alternative()).to_str()) {
       case '0':
-        const datumBytes = receiverDatumHashCpd.data().get(0).as_bytes();
-        if (!datumBytes) throw new Error('No byte buffer found for receiver datum hash');
+        const datumBytes = mfs.manage(mfs.manage(receiverDatumHashCpd.data()).get(0)).as_bytes();
+        if (!datumBytes) {
+          mfs.dispose();
+          throw new Error('No byte buffer found for receiver datum hash');
+        }
         receiverDatumHash = toHex(datumBytes);
       case '1':
         break;
       default:
+        mfs.dispose();
         throw new Error('Unhandled alternative for receiver datum hash constructor');
     }
 
-    const orderStep = new MinswapOrderStepDecoder().decode(fields.get(3).to_hex());
+    const orderStep = new MinswapOrderStepDecoder().decode(toHex(fields.get(3).to_bytes()));
     const batcherFee = fields.get(4).as_integer();
     if (!batcherFee) throw new Error('Expected integer for batcher fee.');
     const outputAda = fields.get(5).as_integer();
     if (!outputAda) throw new Error('Expected integer for batcher output ADA.');
 
     return MinswapOrderDatumBuilder.new()
-      .sender(sender.to_bech32())
-      .receiver(receiver.to_bech32())
+      .sender(sender)
+      .receiver(receiver)
       .receiverDatumHash(receiverDatumHash)
       .orderStep(orderStep)
       .batcherFee(BigInt(batcherFee.to_str()))
@@ -72,12 +84,12 @@ export class MinswapOrderDatumBuilder implements Builder<IMinswapOrderDatum> {
 
   static new = () => new MinswapOrderDatumBuilder();
 
-  sender(bech32Address: string): MinswapOrderDatumBuilder {
+  sender(bech32Address: Bech32Address): MinswapOrderDatumBuilder {
     this._sender = bech32Address;
     return this;
   }
 
-  receiver(bech32Address: string): MinswapOrderDatumBuilder {
+  receiver(bech32Address: Bech32Address): MinswapOrderDatumBuilder {
     this._receiver = bech32Address;
     return this;
   }
@@ -117,18 +129,38 @@ export class MinswapOrderDatumBuilder implements Builder<IMinswapOrderDatum> {
       outputAda: this._outputAda,
 
       encode: () => {
-        const senderAddress = Address.from_bech32(this._sender);
-        const receiverAddress = Address.from_bech32(this._receiver);
-
+        const mfs = new ManagedFreeableScope();
         const fields = PlutusList.new();
-        fields.add(EncodableAddressBuilder.new().address(senderAddress).build().encode());
-        fields.add(EncodableAddressBuilder.new().address(receiverAddress).build().encode());
-        if (this._receiverDatumHash) fields.add(PlutusData.from_hex(this._receiverDatumHash));
-        else fields.add(PlutusData.new_constr_plutus_data(ConstrPlutusData.new(BigNum.one(), PlutusList.new())));
-        fields.add(this._orderStep.encode());
-        fields.add(PlutusData.new_integer(CSLBigInt.from_str(this._batcherFee.toString())));
-        fields.add(PlutusData.new_integer(CSLBigInt.from_str(this._outputAda.toString())));
-        return PlutusData.new_constr_plutus_data(ConstrPlutusData.new(BigNum.zero(), fields));
+        mfs.manage(fields);
+
+        fields.add(
+          mfs.manage(toPlutusData(EncodableAddressBuilder.new().bech32Address(this._sender).build().encode())),
+        );
+        fields.add(
+          mfs.manage(toPlutusData(EncodableAddressBuilder.new().bech32Address(this._receiver).build().encode())),
+        );
+        if (this._receiverDatumHash) fields.add(mfs.manage(PlutusData.from_bytes(fromHex(this._receiverDatumHash))));
+        else
+          fields.add(
+            mfs.manage(
+              PlutusData.new_constr_plutus_data(
+                mfs.manage(ConstrPlutusData.new(mfs.manage(BigNum.from_str('1')), mfs.manage(PlutusList.new()))),
+              ),
+            ),
+          );
+        fields.add(mfs.manage(toPlutusData(this._orderStep.encode())));
+        fields.add(mfs.manage(PlutusData.new_integer(mfs.manage(CSLBigInt.from_str(this._batcherFee.toString())))));
+        fields.add(mfs.manage(PlutusData.new_integer(mfs.manage(CSLBigInt.from_str(this._outputAda.toString())))));
+
+        const result = toHex(
+          mfs
+            .manage(
+              PlutusData.new_constr_plutus_data(mfs.manage(ConstrPlutusData.new(mfs.manage(BigNum.zero()), fields))),
+            )
+            .to_bytes(),
+        );
+        mfs.dispose();
+        return result;
       },
     };
   }

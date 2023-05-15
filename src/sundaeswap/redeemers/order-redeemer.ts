@@ -1,18 +1,25 @@
-import { BigNum, ConstrPlutusData, PlutusData, PlutusList } from '@emurgo/cardano-serialization-lib-browser';
-import { AssetClassDecoder, Builder, Decodable, IAssetClass, fromHex } from '../../utils';
+import { BigNum, ConstrPlutusData, PlutusData, PlutusList } from '@dcspark/cardano-multiplatform-lib-nodejs';
+import { AssetClassDecoder, Builder, Decodable, IAssetClass, ManagedFreeableScope, fromHex, toHex } from '../../utils';
 import { IOrderRedeemer, ISundaeswapOrderRedeemerType } from './types';
 
 export class SundaeswapOrderRedeemerDecoder implements Decodable<IOrderRedeemer> {
   decode(cborHex: string): IOrderRedeemer {
-    const pd = PlutusData.from_bytes(fromHex(cborHex));
-    const cpd = pd.as_constr_plutus_data();
-    if (!cpd) throw new Error('Invalid constructor plutus data for order redeemer');
+    const mfs = new ManagedFreeableScope();
+    const pd = mfs.manage(PlutusData.from_bytes(fromHex(cborHex)));
+    const cpd = mfs.manage(pd.as_constr_plutus_data());
+    if (!cpd) {
+      mfs.dispose();
+      throw new Error('Expected plutus constr');
+    }
+    const alternative = mfs.manage(cpd.alternative()).to_str();
+    const pdHex = toHex(pd.to_bytes());
+    mfs.dispose();
 
-    switch (cpd.alternative().to_str()) {
+    switch (alternative) {
       case '0':
         return SundaeswapOrderRedeemerBuilder.new()
           .type('OrderScoop')
-          .scooper(new AssetClassDecoder().decode(pd.to_hex()))
+          .scooper(new AssetClassDecoder().decode(pdHex))
           .build();
       case '1':
         return SundaeswapOrderRedeemerBuilder.new().type('OrderCancel').build();
@@ -46,9 +53,24 @@ export class SundaeswapOrderRedeemerBuilder implements Builder<IOrderRedeemer> {
 
       encode: () => {
         if (this._scooper) return this._scooper.encode();
-        const fields = PlutusList.new();
-        const alternative: BigNum = this._type === 'OrderScoop' ? BigNum.zero() : BigNum.one();
-        return PlutusData.new_constr_plutus_data(ConstrPlutusData.new(alternative, fields));
+        const mfs = new ManagedFreeableScope();
+        const fields = mfs.manage(PlutusList.new());
+        const result = toHex(
+          mfs
+            .manage(
+              PlutusData.new_constr_plutus_data(
+                mfs.manage(
+                  ConstrPlutusData.new(
+                    this._type === 'OrderScoop' ? mfs.manage(BigNum.zero()) : mfs.manage(BigNum.from_str('1')),
+                    fields,
+                  ),
+                ),
+              ),
+            )
+            .to_bytes(),
+        );
+        mfs.dispose();
+        return result;
       },
     };
   }
