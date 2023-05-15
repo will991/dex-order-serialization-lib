@@ -4,7 +4,7 @@ import {
   ConstrPlutusData,
   PlutusData,
   PlutusList,
-} from '@emurgo/cardano-serialization-lib-nodejs';
+} from '@dcspark/cardano-multiplatform-lib-nodejs';
 import { Builder, Decodable, Encodable, ManagedFreeableScope, fromHex, toHex } from '../../utils';
 import { EncodableBigInt } from '../../utils/encodable-bigint';
 import { ICoin, IDespositSingle, ISundaeswapOrderAction, ISundaeswapOrderWithdraw } from './types';
@@ -28,7 +28,7 @@ export class SundaeswapOrderActionDecoder implements Decodable<ISundaeswapOrderA
     const alternative = mfs.manage(cpd.alternative()).to_str();
     switch (alternative) {
       case '0':
-        const cbor = pd.to_hex();
+        const cbor = toHex(pd.to_bytes());
         mfs.dispose();
         return new OrderSwapDecoder().decode(cbor);
       case '1':
@@ -138,8 +138,14 @@ export class SundaeswapOrderSwapBuilder extends SundaeswapOrderActionBuilder<ISu
         const mfs = new ManagedFreeableScope();
         const fields = mfs.manage(PlutusList.new());
 
-        const coinAlternative = mfs.manage(this._coin ? BigNum.zero() : BigNum.one());
-        fields.add(mfs.manage(PlutusData.new_empty_constr_plutus_data(coinAlternative)));
+        const coinAlternative = mfs.manage(this._coin ? BigNum.zero() : BigNum.from_str('1'));
+        fields.add(
+          mfs.manage(
+            PlutusData.new_constr_plutus_data(
+              mfs.manage(ConstrPlutusData.new(coinAlternative, mfs.manage(PlutusList.new()))),
+            ),
+          ),
+        );
         fields.add(mfs.manage(PlutusData.new_integer(mfs.manage(CSLBigInt.from_str(this._amount.toString())))));
 
         if (this._minimumReceivedAmount) {
@@ -155,7 +161,13 @@ export class SundaeswapOrderSwapBuilder extends SundaeswapOrderActionBuilder<ISu
             ),
           );
         } else {
-          fields.add(mfs.manage(PlutusData.new_empty_constr_plutus_data(mfs.manage(BigNum.one()))));
+          fields.add(
+            mfs.manage(
+              PlutusData.new_constr_plutus_data(
+                mfs.manage(ConstrPlutusData.new(mfs.manage(BigNum.from_str('1')), mfs.manage(PlutusList.new()))),
+              ),
+            ),
+          );
         }
 
         const result = toHex(
@@ -196,8 +208,14 @@ export class SundaeswapOrderDepositSingleBuilder extends SundaeswapOrderActionBu
       encode: () => {
         const mfs = new ManagedFreeableScope();
         const fields = mfs.manage(PlutusList.new());
-        const coinAlternative = mfs.manage(this._coin ? BigNum.zero() : BigNum.one());
-        fields.add(mfs.manage(PlutusData.new_empty_constr_plutus_data(coinAlternative)));
+        const coinAlternative = mfs.manage(this._coin ? BigNum.zero() : BigNum.from_str('1'));
+        fields.add(
+          mfs.manage(
+            PlutusData.new_constr_plutus_data(
+              mfs.manage(ConstrPlutusData.new(coinAlternative, mfs.manage(PlutusList.new()))),
+            ),
+          ),
+        );
         fields.add(mfs.manage(PlutusData.new_integer(mfs.manage(CSLBigInt.from_str(this._amount.toString())))));
 
         const result = toHex(

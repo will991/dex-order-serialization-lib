@@ -1,6 +1,5 @@
-import { BigNum, ConstrPlutusData, PlutusData, PlutusList } from '@emurgo/cardano-serialization-lib-nodejs';
-import { Builder, Encodable, ManagedFreeableScope, toHex } from '../../utils';
-import { toPlutusData } from '../../utils/plutusdata';
+import { BigNum, ConstrPlutusData, PlutusData, PlutusList } from '@dcspark/cardano-multiplatform-lib-nodejs';
+import { Builder, Encodable, ManagedFreeableScope, toHex, toPlutusData } from '../../utils';
 import { IAB } from './types';
 
 export class ABBuilder<T extends Encodable> implements Builder<IAB<T>> {

@@ -4,7 +4,7 @@ import {
   ConstrPlutusData,
   PlutusData,
   PlutusList,
-} from '@emurgo/cardano-serialization-lib-nodejs';
+} from '@dcspark/cardano-multiplatform-lib-nodejs';
 import { Builder, Decodable, Network, fromHex, toHex } from '../../utils';
 import { AddressDecoder, Bech32Address, EncodableAddressBuilder } from '../../utils/encodable-address';
 import { ManagedFreeableScope } from '../../utils/freeable';
@@ -32,8 +32,8 @@ export class MinswapOrderDatumDecoder implements Decodable<IMinswapOrderDatum> {
       mfs.dispose();
       throw new Error(`Expected exactly 6 fields for order datum, received: ${len}`);
     }
-    const sender = new AddressDecoder(this.network).decode(mfs.manage(fields.get(0)).to_hex());
-    const receiver = new AddressDecoder(this.network).decode(mfs.manage(fields.get(1)).to_hex());
+    const sender = new AddressDecoder(this.network).decode(toHex(mfs.manage(fields.get(0)).to_bytes()));
+    const receiver = new AddressDecoder(this.network).decode(toHex(mfs.manage(fields.get(1)).to_bytes()));
 
     const receiverDatumHashCpd = mfs.manage(mfs.manage(fields.get(2)).as_constr_plutus_data());
     if (!receiverDatumHashCpd) {
@@ -57,17 +57,11 @@ export class MinswapOrderDatumDecoder implements Decodable<IMinswapOrderDatum> {
         throw new Error('Unhandled alternative for receiver datum hash constructor');
     }
 
-    const orderStep = new MinswapOrderStepDecoder().decode(fields.get(3).to_hex());
-    const batcherFee = mfs.manage(mfs.manage(fields.get(4)).as_integer());
-    if (!batcherFee) {
-      mfs.dispose();
-      throw new Error('Expected integer for batcher fee.');
-    }
-    const outputAda = mfs.manage(mfs.manage(fields.get(5)).as_integer());
-    if (!outputAda) {
-      mfs.dispose();
-      throw new Error('Expected integer for batcher output ADA.');
-    }
+    const orderStep = new MinswapOrderStepDecoder().decode(toHex(fields.get(3).to_bytes()));
+    const batcherFee = fields.get(4).as_integer();
+    if (!batcherFee) throw new Error('Expected integer for batcher fee.');
+    const outputAda = fields.get(5).as_integer();
+    if (!outputAda) throw new Error('Expected integer for batcher output ADA.');
 
     return MinswapOrderDatumBuilder.new()
       .sender(sender)
@@ -145,12 +139,12 @@ export class MinswapOrderDatumBuilder implements Builder<IMinswapOrderDatum> {
         fields.add(
           mfs.manage(toPlutusData(EncodableAddressBuilder.new().bech32Address(this._receiver).build().encode())),
         );
-        if (this._receiverDatumHash) fields.add(mfs.manage(PlutusData.from_hex(this._receiverDatumHash)));
+        if (this._receiverDatumHash) fields.add(mfs.manage(PlutusData.from_bytes(fromHex(this._receiverDatumHash))));
         else
           fields.add(
             mfs.manage(
               PlutusData.new_constr_plutus_data(
-                mfs.manage(ConstrPlutusData.new(mfs.manage(BigNum.one()), mfs.manage(PlutusList.new()))),
+                mfs.manage(ConstrPlutusData.new(mfs.manage(BigNum.from_str('1')), mfs.manage(PlutusList.new()))),
               ),
             ),
           );

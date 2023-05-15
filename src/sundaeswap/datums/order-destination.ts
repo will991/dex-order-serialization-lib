@@ -1,4 +1,4 @@
-import { BigNum, ConstrPlutusData, PlutusData, PlutusList } from '@emurgo/cardano-serialization-lib-nodejs';
+import { BigNum, ConstrPlutusData, PlutusData, PlutusList } from '@dcspark/cardano-multiplatform-lib-nodejs';
 import {
   AddressDecoder,
   Builder,
@@ -28,7 +28,7 @@ export class SundaeswapOrderDestinationDecoder implements Decodable<ISundaeswapO
     const fields = cpd.data();
     if (fields.len() !== 2)
       throw new Error(`Expected exactly 2 fields for order destination datum, received: ${fields.len()}`);
-    const address = new AddressDecoder(this.network).decode(fields.get(0).to_hex());
+    const address = new AddressDecoder(this.network).decode(toHex(fields.get(0).to_bytes()));
 
     const datumHashConstr = fields.get(1).as_constr_plutus_data();
     if (!datumHashConstr) throw new Error('Invalid datum hash type. Expected plutus data constructor');
@@ -36,7 +36,7 @@ export class SundaeswapOrderDestinationDecoder implements Decodable<ISundaeswapO
       case '0':
         return SundaeswapOrderDestinationBuilder.new()
           .bech32Address(address)
-          .datumHash(datumHashConstr.data().get(0).to_hex())
+          .datumHash(toHex(datumHashConstr.data().get(0).to_bytes()))
           .build();
       case '1':
         return SundaeswapOrderDestinationBuilder.new().bech32Address(address).build();
@@ -78,14 +78,20 @@ export class SundaeswapOrderDestinationBuilder implements Builder<ISundaeswapOrd
 
         if (this._datumHash) {
           const f = mfs.manage(PlutusList.new());
-          f.add(mfs.manage(PlutusData.from_hex(this._datumHash)));
+          f.add(mfs.manage(PlutusData.from_bytes(fromHex(this._datumHash))));
           fields.add(
             mfs.manage(
               PlutusData.new_constr_plutus_data(mfs.manage(ConstrPlutusData.new(mfs.manage(BigNum.zero()), f))),
             ),
           );
         } else {
-          fields.add(mfs.manage(PlutusData.new_empty_constr_plutus_data(mfs.manage(BigNum.one()))));
+          fields.add(
+            mfs.manage(
+              PlutusData.new_constr_plutus_data(
+                mfs.manage(ConstrPlutusData.new(mfs.manage(BigNum.from_str('1')), mfs.manage(PlutusList.new()))),
+              ),
+            ),
+          );
         }
 
         const result = toHex(

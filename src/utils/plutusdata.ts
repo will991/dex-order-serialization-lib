@@ -1,4 +1,4 @@
-import { PlutusData } from '@emurgo/cardano-serialization-lib-nodejs';
+import { PlutusData } from '@dcspark/cardano-multiplatform-lib-nodejs';
 import { fromHex } from './base16';
 import { PlutusDataBytes } from './types';
 

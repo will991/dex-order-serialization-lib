@@ -1,4 +1,4 @@
-import { BigNum, ConstrPlutusData, PlutusData, PlutusList } from '@emurgo/cardano-serialization-lib-nodejs';
+import { BigNum, ConstrPlutusData, PlutusData, PlutusList } from '@dcspark/cardano-multiplatform-lib-nodejs';
 import { AssetClassDecoder, Builder, Decodable, IAssetClass, ManagedFreeableScope, fromHex, toHex } from '../../utils';
 import { IOrderRedeemer, ISundaeswapOrderRedeemerType } from './types';
 
@@ -12,7 +12,7 @@ export class SundaeswapOrderRedeemerDecoder implements Decodable<IOrderRedeemer>
       throw new Error('Expected plutus constr');
     }
     const alternative = mfs.manage(cpd.alternative()).to_str();
-    const pdHex = pd.to_hex();
+    const pdHex = toHex(pd.to_bytes());
     mfs.dispose();
 
     switch (alternative) {
@@ -61,7 +61,7 @@ export class SundaeswapOrderRedeemerBuilder implements Builder<IOrderRedeemer> {
               PlutusData.new_constr_plutus_data(
                 mfs.manage(
                   ConstrPlutusData.new(
-                    this._type === 'OrderScoop' ? mfs.manage(BigNum.zero()) : mfs.manage(BigNum.one()),
+                    this._type === 'OrderScoop' ? mfs.manage(BigNum.zero()) : mfs.manage(BigNum.from_str('1')),
                     fields,
                   ),
                 ),

@@ -18,12 +18,12 @@ Example for creating an [`IAssetClass`](./src/utils/types.ts#L27-L32):
 ```
 const minswapAC: IAssetClass = AssetClassBuilder.new()
   .currencySymbol('29d222ce763455e3d7a09a665ce554f00ac89d2e99a1a83d267170c6')
-  .assetName('4d494e')
+  .tokenName('4d494e')
   .build();
 
 const plutusData: PlutusData = minswapAC.encode();
 const cborBytes: UInt8Array = plutusData.to_bytes();
-const cborHex: string = plutusData.to_hex();
+const cborHex: string = toHex(plutusData.to_bytes());
 ```
 
 ### Decoder type

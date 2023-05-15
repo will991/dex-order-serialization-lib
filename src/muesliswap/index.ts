@@ -1,2 +1,2 @@
-export * from '/datums';
-export * from '/redeemers';
+export * from './datums';
+export * from './redeemers';

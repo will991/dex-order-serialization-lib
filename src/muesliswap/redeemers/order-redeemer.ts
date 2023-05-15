@@ -1,4 +1,4 @@
-import { BigNum, PlutusData } from '@emurgo/cardano-serialization-lib-nodejs';
+import { BigNum, ConstrPlutusData, PlutusData, PlutusList } from '@dcspark/cardano-multiplatform-lib-nodejs';
 import { Builder, Decodable, ManagedFreeableScope, fromHex, toHex } from '../../utils';
 import { IMuesliswapOrderRedeemer, IMuesliswapOrderRedeemerType } from './types';
 
@@ -38,7 +38,15 @@ export class MuesliswapOrderRedeemerBuilder implements Builder<IMuesliswapOrderR
 
       encode: () => {
         const mfs = new ManagedFreeableScope();
-        const result = toHex(mfs.manage(PlutusData.new_empty_constr_plutus_data(mfs.manage(BigNum.zero()))).to_bytes());
+        const result = toHex(
+          mfs
+            .manage(
+              PlutusData.new_constr_plutus_data(
+                mfs.manage(ConstrPlutusData.new(mfs.manage(BigNum.zero()), mfs.manage(PlutusList.new()))),
+              ),
+            )
+            .to_bytes(),
+        );
         mfs.dispose();
         return result;
       },

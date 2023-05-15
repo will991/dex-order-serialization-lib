@@ -6,7 +6,7 @@ import {
   EnterpriseAddress,
   PlutusData,
   PlutusList,
-} from '@emurgo/cardano-serialization-lib-nodejs';
+} from '@dcspark/cardano-multiplatform-lib-nodejs';
 import { fromHex, toHex } from './base16';
 import { ManagedFreeableScope } from './freeable';
 import { Builder, Decodable, Encodable, Network } from './types';
@@ -79,15 +79,15 @@ export class AddressDecoder implements Decodable<Bech32Address> {
         this.network === 'Testnet'
           ? mfs
               .manage(
-                Address.from_hex(
-                  `${PAYMENT_STAKE_ADDRESS_KEY_KEY_PREFIX_TESTNET}${toHex(pkhBytes)}${toHex(spkhBytes!)}`,
+                Address.from_bytes(
+                  fromHex(`${PAYMENT_STAKE_ADDRESS_KEY_KEY_PREFIX_TESTNET}${toHex(pkhBytes)}${toHex(spkhBytes!)}`),
                 ),
               )
               .to_bech32()
           : mfs
               .manage(
-                Address.from_hex(
-                  `${PAYMENT_STAKE_ADDRESS_KEY_KEY_PREFIX_MAINNET}${toHex(pkhBytes)}${toHex(spkhBytes!)}`,
+                Address.from_bytes(
+                  fromHex(`${PAYMENT_STAKE_ADDRESS_KEY_KEY_PREFIX_MAINNET}${toHex(pkhBytes)}${toHex(spkhBytes!)}`),
                 ),
               )
               .to_bech32();
@@ -97,8 +97,8 @@ export class AddressDecoder implements Decodable<Bech32Address> {
     } else {
       const addr =
         this.network === 'Testnet'
-          ? mfs.manage(Address.from_hex(`${PAYMENT_ADDRESS_PREFIX_TESTNET}${toHex(pkhBytes)}`)).to_bech32()
-          : mfs.manage(Address.from_hex(`${PAYMENT_ADDRESS_PREFIX_MAINNET}${toHex(pkhBytes)}`)).to_bech32();
+          ? mfs.manage(Address.from_bytes(fromHex(`${PAYMENT_ADDRESS_PREFIX_TESTNET}${toHex(pkhBytes)}`))).to_bech32()
+          : mfs.manage(Address.from_bytes(fromHex(`${PAYMENT_ADDRESS_PREFIX_MAINNET}${toHex(pkhBytes)}`))).to_bech32();
       mfs.dispose();
       return addr;
     }

@@ -4,10 +4,8 @@ import {
   ConstrPlutusData,
   PlutusData,
   PlutusList,
-} from '@emurgo/cardano-serialization-lib-nodejs';
-import { AssetClassDecoder, fromHex, toHex } from '../../utils';
-import { ManagedFreeableScope } from '../../utils/freeable';
-import { toPlutusData } from '../../utils/plutusdata';
+} from '@dcspark/cardano-multiplatform-lib-nodejs';
+import { AssetClassDecoder, ManagedFreeableScope, fromHex, toHex, toPlutusData } from '../../utils';
 import { Builder, Decodable, Encodable, IAssetClass } from '../../utils/types';
 import { IMinswapOrderStep, IMinswapSwapExactIn, IMinswapSwapExactOut } from './types';
 
@@ -24,7 +22,7 @@ export class MinswapOrderStepDecoder implements Decodable<IMinswapOrderStep> {
       throw new Error(`Expected exactly 2 fields for order step, received: ${fields.len()}`);
     }
 
-    const ac = new AssetClassDecoder().decode(mfs.manage(fields.get(0)).to_hex());
+    const ac = new AssetClassDecoder().decode(toHex(mfs.manage(fields.get(0)).to_bytes()));
     const amt = mfs.manage(mfs.manage(fields.get(1)).as_integer())?.to_str();
     const alternative = mfs.manage(cpd.alternative()).to_str();
     mfs.dispose();
@@ -117,7 +115,9 @@ export class MinswapSwapExactOutBuilder extends MinswapOrderStepBuilder<IMinswap
         const result = toHex(
           mfs
             .manage(
-              PlutusData.new_constr_plutus_data(mfs.manage(ConstrPlutusData.new(mfs.manage(BigNum.one()), fields))),
+              PlutusData.new_constr_plutus_data(
+                mfs.manage(ConstrPlutusData.new(mfs.manage(BigNum.from_str('1')), fields)),
+              ),
             )
             .to_bytes(),
         );

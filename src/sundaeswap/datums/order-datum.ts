@@ -4,7 +4,7 @@ import {
   ConstrPlutusData,
   PlutusData,
   PlutusList,
-} from '@emurgo/cardano-serialization-lib-nodejs';
+} from '@dcspark/cardano-multiplatform-lib-nodejs';
 import { Builder, Decodable, ManagedFreeableScope, Network, fromHex, toHex, toPlutusData } from '../../utils';
 import { SUNDAESWAP_SCOOPER_FEE_LOVELACE } from '../constant';
 import { SundaeswapOrderActionDecoder } from './order-action';
@@ -35,14 +35,14 @@ export class SundaeswapOrderDatumDecoder implements Decodable<ISundaeswapOrderDa
       mfs.dispose();
       throw new Error('No byte buffer found for pool identifier');
     }
-    const addr = mfs.manage(fields.get(1)).to_hex();
+    const addr = toHex(mfs.manage(fields.get(1)).to_bytes());
     const orderAddress = new SundaeswapOrderAddressDecoder(this.network).decode(addr);
     const scooperFee = mfs.manage(mfs.manage(fields.get(2)).as_integer())?.to_str();
     if (!scooperFee) {
       mfs.dispose();
       throw new Error('No byte buffer found for scooper fee');
     }
-    const action = new SundaeswapOrderActionDecoder().decode(mfs.manage(fields.get(3)).to_hex());
+    const action = new SundaeswapOrderActionDecoder().decode(toHex(mfs.manage(fields.get(3)).to_bytes()));
 
     return SundaeswapOrderDatumBuilder.new()
       .poolIdentifier(toHex(poolIdBytes))

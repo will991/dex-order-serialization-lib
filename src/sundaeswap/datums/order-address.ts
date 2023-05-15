@@ -1,4 +1,4 @@
-import { BigNum, ConstrPlutusData, PlutusData, PlutusList } from '@emurgo/cardano-serialization-lib-nodejs';
+import { BigNum, ConstrPlutusData, PlutusData, PlutusList } from '@dcspark/cardano-multiplatform-lib-nodejs';
 import { Builder, Decodable, ManagedFreeableScope, Network, fromHex, toHex, toPlutusData } from '../../utils';
 import { SundaeswapOrderDestinationDecoder } from './order-destination';
 import { ISundaeswapOrderAddress, ISundaeswapOrderDestination } from './types';
@@ -23,7 +23,9 @@ export class SundaeswapOrderAddressDecoder implements Decodable<ISundaeswapOrder
       throw new Error(`Expected exactly 2 fields for order address datum, received: ${len}`);
     }
 
-    const destAddress = new SundaeswapOrderDestinationDecoder(this.network).decode(mfs.manage(fields.get(0)).to_hex());
+    const destAddress = new SundaeswapOrderDestinationDecoder(this.network).decode(
+      toHex(mfs.manage(fields.get(0)).to_bytes()),
+    );
     const pkhConstr = mfs.manage(mfs.manage(fields.get(1)).as_constr_plutus_data());
     if (!pkhConstr) {
       mfs.dispose();
@@ -33,7 +35,7 @@ export class SundaeswapOrderAddressDecoder implements Decodable<ISundaeswapOrder
     const alternative = mfs.manage(pkhConstr.alternative()).to_str();
     switch (alternative) {
       case '0':
-        const pkhHex = mfs.manage(mfs.manage(pkhConstr.data()).get(0)).to_hex();
+        const pkhHex = toHex(mfs.manage(mfs.manage(pkhConstr.data()).get(0)).to_bytes());
         mfs.dispose();
         return SundaeswapOrderAddressBuilder.new().destination(destAddress).pkh(pkhHex).build();
       case '1':
@@ -81,7 +83,13 @@ export class SundaeswapOrderAddressBuilder implements Builder<ISundaeswapOrderAd
             ),
           );
         } else {
-          fields.add(mfs.manage(PlutusData.new_empty_constr_plutus_data(mfs.manage(BigNum.one()))));
+          fields.add(
+            mfs.manage(
+              PlutusData.new_constr_plutus_data(
+                mfs.manage(ConstrPlutusData.new(mfs.manage(BigNum.from_str('1')), mfs.manage(PlutusList.new()))),
+              ),
+            ),
+          );
         }
 
         const result = toHex(

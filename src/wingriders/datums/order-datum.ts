@@ -4,7 +4,7 @@ import {
   ConstrPlutusData,
   PlutusData,
   PlutusList,
-} from '@emurgo/cardano-serialization-lib-nodejs';
+} from '@dcspark/cardano-multiplatform-lib-nodejs';
 import {
   AssetClassDecoder,
   Builder,
@@ -52,7 +52,7 @@ export class WingridersOrderDatumDecoder implements Decodable<IWingridersOrderDa
     }
 
     const beneficiary = new AddressDecoder(this.network).decode(
-      mfs.manage(mfs.manage(metadataFields.get(0)).as_constr_plutus_data())!.to_hex(),
+      toHex(mfs.manage(mfs.manage(metadataFields.get(0)).as_constr_plutus_data())!.to_bytes()),
     );
 
     const owner = mfs.manage(metadataFields.get(1)).as_bytes();
@@ -73,8 +73,8 @@ export class WingridersOrderDatumDecoder implements Decodable<IWingridersOrderDa
       throw new Error('Expected plutus constr for token pair');
     }
 
-    const assetA = new AssetClassDecoder().decode(mfs.manage(mfs.manage(pair.data()).get(0)).to_hex());
-    const assetB = new AssetClassDecoder().decode(mfs.manage(mfs.manage(pair.data()).get(1)).to_hex());
+    const assetA = new AssetClassDecoder().decode(toHex(mfs.manage(mfs.manage(pair.data()).get(0)).to_bytes()));
+    const assetB = new AssetClassDecoder().decode(toHex(mfs.manage(mfs.manage(pair.data()).get(1)).to_bytes()));
 
     const directionAlternativeCpd = mfs.manage(mfs.manage(swapFields.get(0)).as_constr_plutus_data());
     if (!directionAlternativeCpd) {
@@ -185,8 +185,13 @@ export class WingridersOrderDatumBuilder implements Builder<IWingridersOrderDatu
         mfs.manage(swap);
 
         swap.add(
-          PlutusData.new_empty_constr_plutus_data(
-            BigNum.from_str(this.direction === IWingridersSwapDirection.ATOB ? '0' : '1'),
+          PlutusData.new_constr_plutus_data(
+            mfs.manage(
+              ConstrPlutusData.new(
+                mfs.manage(BigNum.from_str(this.direction === IWingridersSwapDirection.ATOB ? '0' : '1')),
+                mfs.manage(PlutusList.new()),
+              ),
+            ),
           ),
         );
         swap.add(PlutusData.new_integer(CSLBigInt.from_str(this.minAmount.toString())));

@@ -1,4 +1,4 @@
-import { BigInt as CSLBigInt, PlutusData } from '@emurgo/cardano-serialization-lib-nodejs';
+import { BigInt as CSLBigInt, PlutusData } from '@dcspark/cardano-multiplatform-lib-nodejs';
 import { toHex } from './base16';
 import { ManagedFreeableScope } from './freeable';
 import { Encodable, PlutusDataBytes } from './types';

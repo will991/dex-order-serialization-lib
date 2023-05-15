@@ -4,7 +4,7 @@ import {
   ConstrPlutusData,
   PlutusData,
   PlutusList,
-} from '@emurgo/cardano-serialization-lib-nodejs';
+} from '@dcspark/cardano-multiplatform-lib-nodejs';
 import {
   AddressDecoder,
   Builder,
@@ -49,7 +49,7 @@ export class MuesliswapOrderDatumDecoder implements Decodable<IMuesliswapOrderDa
       throw new Error(`Expected exactly 8 fields for order datum, received: ${len}`);
     }
 
-    const sender = new AddressDecoder(this.network).decode(mfs.manage(nestedFields.get(0)).to_hex());
+    const sender = new AddressDecoder(this.network).decode(toHex(mfs.manage(nestedFields.get(0)).to_bytes()));
     const buyCurrencySymbol = mfs.manage(nestedFields.get(1)).as_bytes();
     if (!buyCurrencySymbol) {
       mfs.dispose();
@@ -197,9 +197,21 @@ export class MuesliswapOrderDatumBuilder implements Builder<IMuesliswapOrderDatu
         fields.add(mfs.manage(PlutusData.new_integer(mfs.manage(CSLBigInt.from_str(this.buyAmount.toString())))));
 
         if (this.allowPartial) {
-          fields.add(mfs.manage(PlutusData.new_empty_constr_plutus_data(mfs.manage(BigNum.one()))));
+          fields.add(
+            mfs.manage(
+              PlutusData.new_constr_plutus_data(
+                mfs.manage(ConstrPlutusData.new(mfs.manage(BigNum.from_str('1')), mfs.manage(PlutusList.new()))),
+              ),
+            ),
+          );
         } else {
-          fields.add(mfs.manage(PlutusData.new_empty_constr_plutus_data(mfs.manage(BigNum.zero()))));
+          fields.add(
+            mfs.manage(
+              PlutusData.new_constr_plutus_data(
+                mfs.manage(ConstrPlutusData.new(mfs.manage(BigNum.zero()), mfs.manage(PlutusList.new()))),
+              ),
+            ),
+          );
         }
         fields.add(mfs.manage(PlutusData.new_integer(mfs.manage(CSLBigInt.from_str(this.fee.toString())))));
 

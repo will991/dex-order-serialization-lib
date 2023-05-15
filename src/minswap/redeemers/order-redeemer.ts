@@ -1,6 +1,5 @@
-import { BigNum, ConstrPlutusData, PlutusData, PlutusList } from '@emurgo/cardano-serialization-lib-nodejs';
-import { Builder, Decodable, fromHex, toHex } from '../../utils';
-import { ManagedFreeableScope } from '../../utils/freeable';
+import { BigNum, ConstrPlutusData, PlutusData, PlutusList } from '@dcspark/cardano-multiplatform-lib-nodejs';
+import { Builder, Decodable, ManagedFreeableScope, fromHex, toHex } from '../../utils';
 import { IMinswapOrderRedeemer, IMinswapOrderRedeemerType } from './types';
 
 export class MinswapOrderRedeemerDecoder implements Decodable<IMinswapOrderRedeemer> {
@@ -52,7 +51,7 @@ export class MinswapOrderRedeemerBuilder implements Builder<IMinswapOrderRedeeme
               PlutusData.new_constr_plutus_data(
                 mfs.manage(
                   ConstrPlutusData.new(
-                    this._type === 'ApplyOrder' ? mfs.manage(BigNum.zero()) : mfs.manage(BigNum.one()),
+                    this._type === 'ApplyOrder' ? mfs.manage(BigNum.zero()) : mfs.manage(BigNum.from_str('1')),
                     mfs.manage(PlutusList.new()),
                   ),
                 ),
