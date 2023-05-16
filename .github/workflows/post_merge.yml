@@ -19,10 +19,10 @@ jobs:
           node-version: 18.15.0
 
       - name: Install
-        run: npm ci
+        run: yarn install --frozen-lockfile
 
       - name: Unit test
-        run: npm run test:cov
+        run: yarn test:cov
 
   release:
     if: github.event_name == 'push' && !startsWith(github.event.head_commit.message, 'chore(release):')
@@ -42,10 +42,10 @@ jobs:
           node-version: 18.15.0
 
       - name: Install
-        run: npm ci
+        run: yarn install --frozen-lockfile
 
       - name: Build
-        run: npm run build
+        run: yarn build
 
       - name: Release npm package
         env:
