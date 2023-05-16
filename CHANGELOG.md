@@ -1,3 +1,10 @@
+# [1.1.0](https://github.com/will991/dex-order-serialization-lib/compare/v1.0.2...v1.1.0) (2023-05-16)
+
+
+### Features
+
+* build esm and cjs ([ea963a1](https://github.com/will991/dex-order-serialization-lib/commit/ea963a12e1cc7d2e7463eb6e634cf88c6fafd5f8))
+
 ## [1.0.2](https://github.com/will991/dex-order-serialization-lib/compare/v1.0.1...v1.0.2) (2023-05-15)
 
 
